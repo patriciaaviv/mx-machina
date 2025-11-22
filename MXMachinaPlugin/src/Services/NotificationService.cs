@@ -23,28 +23,6 @@ namespace Loupedeck.MXMachinaPlugin
         }
 
         /// <summary>
-        /// Shows a brief popup dialog that auto-dismisses
-        /// </summary>
-        public static void ShowPopup(String title, String message, Int32 dismissAfterSeconds = 3)
-        {
-            try
-            {
-                // Create a HUD-style popup using AppleScript
-                var script = $@"
-                    tell application ""System Events""
-                        display dialog ""{EscapeString(message)}"" with title ""{EscapeString(title)}"" buttons {{""OK""}} default button 1 giving up after {dismissAfterSeconds}
-                    end tell";
-
-                RunAppleScriptAsync(script);
-                PluginLog.Info($"Popup: {title} - {message}");
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Error(ex, "Failed to show popup");
-            }
-        }
-
-        /// <summary>
         /// Shows a floating notification overlay (using osascript)
         /// </summary>
         public static void ShowOverlay(String message, PomodoroState state)
