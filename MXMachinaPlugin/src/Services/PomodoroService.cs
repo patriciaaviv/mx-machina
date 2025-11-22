@@ -9,6 +9,7 @@ namespace Loupedeck.MXMachinaPlugin
         private static PomodoroTimer _timer;
         private static GoogleCalendarService _calendarService;
         private static ActivityMonitorService _activityMonitor;
+        private static StatisticsService _statisticsService;
 
         public static PomodoroTimer Timer
         {
@@ -46,6 +47,18 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     _activityMonitor ??= new ActivityMonitorService();
                     return _activityMonitor;
+                }
+            }
+        }
+
+        public static StatisticsService Statistics
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    _statisticsService ??= new StatisticsService();
+                    return _statisticsService;
                 }
             }
         }
@@ -105,6 +118,16 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 // Show completion notification
                 NotificationService.NotifySessionComplete(state, Timer.CompletedPomodoros);
+
+                // Record session in statistics
+                var duration = state switch
+                {
+                    PomodoroState.Work => Timer.WorkMinutes,
+                    PomodoroState.ShortBreak => Timer.ShortBreakMinutes,
+                    PomodoroState.LongBreak => Timer.LongBreakMinutes,
+                    _ => 0
+                };
+                Statistics.RecordSession(state, duration);
 
                 // Create calendar event for completed work sessions only
                 if (state == PomodoroState.Work && Calendar.IsAuthenticated)
