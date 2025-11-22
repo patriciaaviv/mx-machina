@@ -2,7 +2,7 @@ namespace Loupedeck.MXMachinaPlugin
 {
     using System;
 
-    public class PomodoroCommand : PluginMultistateDynamicCommand
+    public class PomodoroCommand : PluginDynamicCommand
     {
         private PomodoroTimer Timer => PomodoroService.Timer;
 
@@ -25,39 +25,13 @@ namespace Loupedeck.MXMachinaPlugin
         public PomodoroCommand()
             : base(displayName: "Pomodoro Timer", description: "Start/Pause pomodoro timer", groupName: "Pomodoro")
         {
-            this.AddState("toggle", "Start/Pause", "Pomodoro");
-            this.AddState("reset", "Reset Timer", "Pomodoro");
-            this.AddState("skip", "Skip Session", "Pomodoro");
         }
 
         protected override void RunCommand(String actionParameter)
         {
             this.EnsureEventsSubscribed();
-
-            switch (actionParameter)
-            {
-                case "toggle":
-                    this.Timer.Toggle();
-                    PluginLog.Info($"Pomodoro {(this.Timer.IsRunning ? "started" : "paused")}: {this.Timer.GetDisplayTime()}");
-                    break;
-
-                case "reset":
-                    this.Timer.Reset();
-                    PluginLog.Info("Pomodoro timer reset");
-                    break;
-
-                case "skip":
-                    this.Timer.Skip();
-                    PluginLog.Info($"Skipped to: {this.Timer.GetStateLabel()}");
-                    break;
-
-                default:
-                    // Default action is toggle
-                    this.Timer.Toggle();
-                    break;
-            }
-
-            this.ActionImageChanged();
+            this.Timer.Toggle();
+           // this.ActionImageChanged();
         }
 
         protected override BitmapImage GetCommandImage(String actionParameter, PluginImageSize imageSize)
