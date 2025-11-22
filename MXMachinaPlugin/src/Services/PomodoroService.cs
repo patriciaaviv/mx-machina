@@ -81,23 +81,23 @@ namespace Loupedeck.MXMachinaPlugin
         private static void InitializeSmartFeatures()
         {
             // Use smart work duration suggestions and show completion notifications
-            Timer.OnSessionComplete += async (state) =>
+            Timer.OnSessionComplete += async (phase) =>
             {
                 // Show completion notification
-                PomodoroService.Notification.NotifySessionComplete(state, Timer.CompletedPomodoros);
+                PomodoroService.Notification.NotifySessionComplete(phase, Timer.CompletedPomodoros);
 
                 // Record session in statistics
-                var duration = state switch
+                var duration = phase switch
                 {
-                    PomodoroState.Work => Timer.WorkMinutes,
-                    PomodoroState.ShortBreak => Timer.ShortBreakMinutes,
-                    PomodoroState.LongBreak => Timer.LongBreakMinutes,
+                    PomodoroPhase.Work => Timer.WorkMinutes,
+                    PomodoroPhase.ShortBreak => Timer.ShortBreakMinutes,
+                    PomodoroPhase.LongBreak => Timer.LongBreakMinutes,
                     _ => 0
                 };
-                Statistics.RecordSession(state, duration);
+                Statistics.RecordSession(phase, duration);
 
                 // Create calendar event for completed work sessions only
-                if (state == PomodoroState.Work && Calendar.IsAuthenticated)
+                if (phase == PomodoroPhase.Work && Calendar.IsAuthenticated)
                 {
                     try
                     {

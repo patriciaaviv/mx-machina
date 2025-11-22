@@ -76,14 +76,14 @@ namespace Loupedeck.MXMachinaPlugin
             }
         }
 
-        public void RecordSession(PomodoroState state, Int32 durationMinutes)
+        public void RecordSession(PomodoroPhase phase, Int32 durationMinutes)
         {
             var session = new SessionRecord
             {
                 StartTime = DateTime.Now.AddMinutes(-durationMinutes),
                 EndTime = DateTime.Now,
                 DurationMinutes = durationMinutes,
-                SessionType = state.ToString()
+                SessionType = phase.ToString()
             };
 
             this._data.Sessions.Add(session);
@@ -96,7 +96,7 @@ namespace Loupedeck.MXMachinaPlugin
             }
 
             this.SaveData();
-            PluginLog.Info($"Recorded {state} session: {durationMinutes} min");
+            PluginLog.Info($"Recorded {phase} session: {durationMinutes} min");
         }
 
         public Int32 GetTotalPomodoros()

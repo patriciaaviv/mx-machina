@@ -2,23 +2,23 @@ namespace Loupedeck.MXMachinaPlugin
 {
     using System;
 
-    public class ResetCommand : PluginDynamicCommand
+    public class StopCommand : PluginDynamicCommand
     {
         private PomodoroTimer Timer => PomodoroService.Timer;
 
-        public ResetCommand()
-            : base(displayName: "Reset", description: "Reset Pomodoro Timer", groupName: "Pomodoro")
+        public StopCommand()
+            : base(displayName: "Stop", description: "Stop and Reset Pomodoro Timer", groupName: "Pomodoro")
         {
         }
 
         protected override void RunCommand(String actionParameter)
         {
-            this.Timer.Reset();
+            this.Timer.Stop();
         }
 
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize)
         {
-            return "Reset";
+            return "Stop";
         }
 
     }

@@ -30,18 +30,18 @@ namespace Loupedeck.MXMachinaPlugin
         protected override void RunCommand(String actionParameter)
         {
             this.EnsureEventsSubscribed();
-            switch (this.Timer.CurrentState)
+            switch (this.Timer.Phase)
             {
-                case PomodoroState.Inactive:
+                case PomodoroPhase.Stopped:
                     this.Timer.Start();
                     break;
-                case PomodoroState.Work:
+                case PomodoroPhase.Work:
                     this.Timer.Toggle();
                     break;
-                case PomodoroState.ShortBreak:
+                case PomodoroPhase.ShortBreak:
                     this.Timer.Skip();
                     break;
-                case PomodoroState.LongBreak:
+                case PomodoroPhase.LongBreak:
                     this.Timer.Skip();
                     break;
                 default:
@@ -52,12 +52,12 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize)
         {
-            return this.Timer.CurrentState switch
+            return this.Timer.Phase switch
             {
-                PomodoroState.Inactive => "Start Timer",
-                PomodoroState.Work => this.Timer.IsRunning ? "Pause Timer" : "Resume Timer",
-                PomodoroState.ShortBreak => "Skip Short Break",
-                PomodoroState.LongBreak => "Skip Long Break",
+                PomodoroPhase.Stopped => "Start Timer",
+                PomodoroPhase.Work => this.Timer.IsRunning ? "Pause Timer" : "Resume Timer",
+                PomodoroPhase.ShortBreak => "Skip Short Break",
+                PomodoroPhase.LongBreak => "Skip Long Break",
                 // Can never happen :-)
                 _ => throw new ApplicationException()
             };
@@ -76,14 +76,14 @@ namespace Loupedeck.MXMachinaPlugin
             BitmapColor textColor = BitmapColor.White;
             BitmapColor accentColor;
 
-            switch (this.Timer.CurrentState)
+            switch (this.Timer.Phase)
             {
-                case PomodoroState.Work:
+                case PomodoroPhase.Work:
                     bgColor = this.Timer.IsRunning ? new BitmapColor(200, 60, 60) : new BitmapColor(120, 40, 40);
                     accentColor = new BitmapColor(255, 100, 100);
                     break;
-                case PomodoroState.ShortBreak:
-                case PomodoroState.LongBreak:
+                case PomodoroPhase.ShortBreak:
+                case PomodoroPhase.LongBreak:
                     bgColor = this.Timer.IsRunning ? new BitmapColor(60, 160, 60) : new BitmapColor(40, 100, 40);
                     accentColor = new BitmapColor(100, 255, 100);
                     break;

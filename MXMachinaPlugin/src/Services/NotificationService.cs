@@ -25,23 +25,23 @@ namespace Loupedeck.MXMachinaPlugin
         /// <summary>
         /// Shows a floating notification overlay (using osascript)
         /// </summary>
-        public void ShowOverlay(String message, PomodoroState state)
+        public void ShowOverlay(String message, PomodoroPhase phase)
         {
             try
             {
-                var emoji = state switch
+                var emoji = phase switch
                 {
-                    PomodoroState.Work => "🍅",
-                    PomodoroState.ShortBreak => "☕",
-                    PomodoroState.LongBreak => "🌴",
+                    PomodoroPhase.Work => "🍅",
+                    PomodoroPhase.ShortBreak => "☕",
+                    PomodoroPhase.LongBreak => "🌴",
                     _ => "⏱️"
                 };
 
-                var title = state switch
+                var title = phase switch
                 {
-                    PomodoroState.Work => "Focus Time Started",
-                    PomodoroState.ShortBreak => "Short Break",
-                    PomodoroState.LongBreak => "Long Break",
+                    PomodoroPhase.Work => "Focus Time Started",
+                    PomodoroPhase.ShortBreak => "Short Break",
+                    PomodoroPhase.LongBreak => "Long Break",
                     _ => "Pomodoro"
                 };
 
@@ -93,19 +93,19 @@ namespace Loupedeck.MXMachinaPlugin
         /// <summary>
         /// Shows session complete notification
         /// </summary>
-        public void NotifySessionComplete(PomodoroState completedState, Int32 completedCount)
+        public void NotifySessionComplete(PomodoroPhase completedPhase, Int32 completedCount)
         {
-            switch (completedState)
+            switch (completedPhase)
             {
-                case PomodoroState.Work:
+                case PomodoroPhase.Work:
                     ShowNotification(
                         "🎉 Focus Session Complete!",
                         $"Great work! You've completed {completedCount} pomodoro(s). Time for a break!",
                         "Hero"
                     );
                     break;
-                case PomodoroState.ShortBreak:
-                case PomodoroState.LongBreak:
+                case PomodoroPhase.ShortBreak:
+                case PomodoroPhase.LongBreak:
                     ShowNotification(
                         "⚡ Break Over",
                         "Ready to focus? Your next work session is starting.",

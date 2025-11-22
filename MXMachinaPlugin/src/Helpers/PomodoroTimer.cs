@@ -3,9 +3,18 @@ namespace Loupedeck.MXMachinaPlugin
     using System;
     using System.Timers;
 
-    public enum PomodoroState
+    public enum TimerState
     {
-        Inactive,
+        Stopped,
+        WorkRunning,
+        WorkPaused,
+        ShortBreak,
+        LongBreak
+    }
+
+    public enum PomodoroPhase
+    {
+        Stopped,
         Work,
         ShortBreak,
         LongBreak
@@ -15,7 +24,6 @@ namespace Loupedeck.MXMachinaPlugin
     {
         public const Int32 PomodorosBeforeLongBreak = 4;
 
-        // Default durations and their limits in minutes
         private const Int32 DefaultWorkMinutes = 25;
         private const Int32 DefaultShortBreakMinutes = 5;
         private const Int32 DefaultLongBreakMinutes = 15;
@@ -26,9 +34,9 @@ namespace Loupedeck.MXMachinaPlugin
 
         public event Action OnTick;
         public event Action OnStateChanged;
-        public event Action<PomodoroState> OnSessionComplete;
+        public event Action<PomodoroPhase> OnSessionComplete;
 
-        public PomodoroState CurrentState { get; private set; } = PomodoroState.Inactive;
+        public TimerState State { get; private set; } = TimerState.Stopped;
 
         private Int32 _workMinutes = DefaultWorkMinutes;
         private Int32 _shortBreakMinutes = DefaultShortBreakMinutes;
@@ -52,31 +60,36 @@ namespace Loupedeck.MXMachinaPlugin
             set => this._longBreakMinutes = Math.Clamp(value, 5, 60);
         }
 
-        public void ResetWorkMinutes()
-        {
-            this._workMinutes = DefaultWorkMinutes;
-        }
-
-        public void ResetLongBreakMinutes()
-        {
-            this._longBreakMinutes = DefaultLongBreakMinutes;
-        }
-
-        public void ResetShortBreakMinutes()
-        {
-            this._shortBreakMinutes = DefaultShortBreakMinutes;
-        }
+        public void ResetWorkMinutes() => this._workMinutes = DefaultWorkMinutes;
+        public void ResetShortBreakMinutes() => this._shortBreakMinutes = DefaultShortBreakMinutes;
+        public void ResetLongBreakMinutes() => this._longBreakMinutes = DefaultLongBreakMinutes;
 
         public void ResetAllTimeSettings()
         {
             this.ResetWorkMinutes();
-            this.ResetLongBreakMinutes();
             this.ResetShortBreakMinutes();
+            this.ResetLongBreakMinutes();
         }
 
         public Int32 CompletedPomodoros { get; private set; }
 
-        public Boolean IsRunning { get; private set; }
+        // Derived properties from State
+        public Boolean IsRunning => this.State is TimerState.WorkRunning
+                                                or TimerState.ShortBreak
+                                                or TimerState.LongBreak;
+
+        public Boolean IsPaused => this.State == TimerState.WorkPaused;
+
+        public Boolean IsActive => this.State != TimerState.Stopped;
+
+        public PomodoroPhase Phase => this.State switch
+        {
+            TimerState.Stopped => PomodoroPhase.Stopped,
+            TimerState.WorkRunning or TimerState.WorkPaused => PomodoroPhase.Work,
+            TimerState.ShortBreak => PomodoroPhase.ShortBreak,
+            TimerState.LongBreak => PomodoroPhase.LongBreak,
+            _ => throw new InvalidOperationException($"Unknown state: {this.State}")
+        };
 
         public TimeSpan RemainingTime
         {
@@ -93,18 +106,19 @@ namespace Loupedeck.MXMachinaPlugin
 
         public PomodoroTimer()
         {
-            this._timer = new Timer(1000); // Update every second
+            this._timer = new Timer(1000);
             this._timer.Elapsed += this.OnTimerElapsed;
             this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
         }
 
         private void OnTimerElapsed(Object sender, ElapsedEventArgs e)
         {
-            var remaining = this.RemainingTime;
-
-            if (remaining <= TimeSpan.Zero)
+            if (this.RemainingTime <= TimeSpan.Zero)
             {
-                this.CompleteCurrentSession();
+                // Timer completed - fire event and advance to next phase
+                var completedPhase = this.Phase;
+                OnSessionComplete?.Invoke(completedPhase);
+                this.Skip();
             }
             else
             {
@@ -112,131 +126,196 @@ namespace Loupedeck.MXMachinaPlugin
             }
         }
 
-        public void Start()
+        private TimeSpan GetDurationForPhase(PomodoroPhase phase) => phase switch
         {
-            if (this.CurrentState == PomodoroState.Inactive)
+            PomodoroPhase.Work => TimeSpan.FromMinutes(this.WorkMinutes),
+            PomodoroPhase.ShortBreak => TimeSpan.FromMinutes(this.ShortBreakMinutes),
+            PomodoroPhase.LongBreak => TimeSpan.FromMinutes(this.LongBreakMinutes),
+            _ => TimeSpan.FromMinutes(this.WorkMinutes)
+        };
+
+        private PomodoroPhase GetPhaseForState(TimerState state) => state switch
+        {
+            TimerState.Stopped => PomodoroPhase.Stopped,
+            TimerState.WorkRunning or TimerState.WorkPaused => PomodoroPhase.Work,
+            TimerState.ShortBreak => PomodoroPhase.ShortBreak,
+            TimerState.LongBreak => PomodoroPhase.LongBreak,
+            _ => throw new InvalidOperationException($"Unknown state: {state}")
+        };
+
+        private void TransitionToState(TimerState newState)
+        {
+            if (this.State == newState)
             {
-                this.CurrentState = PomodoroState.Work;
-                this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
-                PomodoroService.Notification.ShowNotification("🍅 Timer started", $"Focus for {GetDisplayTime()} minutes!", "Blow");
-                OnStateChanged?.Invoke();
-            }
-            else {
-                PomodoroService.Notification.ShowNotification("🍅 Timer resumed", $"Focus for {GetDisplayTime()} minutes!", "Blow");
+                return;
             }
 
-            if (!this.IsRunning)
-            {
-                this._endTime = DateTime.Now + this._remainingTime;
-                this.IsRunning = true;
-                this._timer.Start();
-                OnTick?.Invoke();
-            }
-        }
+            var oldPhase = this.Phase;
+            var oldState = this.State;
+            var newPhase = this.GetPhaseForState(newState);
 
-        public void Pause()
-        {
-            if (this.IsRunning)
-            {
-                this._remainingTime = this.RemainingTime;
-                this.IsRunning = false;
-                this._timer.Stop();
-                PomodoroService.Notification.ShowNotification("🍅 Timer paused", $"{GetDisplayTime()} minutes remaining...", "Blow");
-                OnTick?.Invoke();
-            }
-        }
+            this.State = newState;
 
-        public void Toggle()
-        {
-            if (this.IsRunning)
+            switch (newState)
             {
-                this.Pause();
-            }
-            else
-            {
-                this.Start();
-            }
-        }
+                // Entering a Running state
+                case TimerState.WorkRunning:
+                case TimerState.ShortBreak:
+                case TimerState.LongBreak:
+                    // If coming from paused state of same phase, resume with remaining time
+                    // Otherwise, set timer to full duration of new phase
+                    if (oldPhase != newPhase)
+                    {
+                        this._remainingTime = this.GetDurationForPhase(newPhase);
+                    }
+                    this._endTime = DateTime.Now + this._remainingTime;
+                    this._timer.Start();
 
-        public void Reset()
-        {
-            this._timer.Stop();
-            this.IsRunning = false;
-            this.CurrentState = PomodoroState.Inactive;
-            this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
-            this.CompletedPomodoros = 0;
-            PomodoroService.Notification.ShowNotification("🍅 Timer resetted", "Starting with fresh stats!", "Blow");
+                    // Resume
+                    if (oldState == TimerState.WorkPaused && newState == TimerState.WorkRunning)
+                    {
+                        PomodoroService.Notification.ShowNotification("▶️ Resuming Timer", $"Keep going for {GetDisplayTime()} min!!!", "Blow");
+                    }
+                    else if (newState == TimerState.ShortBreak)
+                    {
+                        PomodoroService.Notification.ShowNotification("🥳 Short Break", $"Enjoy a short {this.ShortBreakMinutes} min break!", "Blow");
+                    }
+                    else if (newState == TimerState.LongBreak)
+                    {
+                        PomodoroService.Notification.ShowNotification("🥳 Long Break", $"Enjoy a long {this.ShortBreakMinutes} min break!", "Blow");
+                    }
+                    // Starting Work
+                    else if (newState == TimerState.WorkRunning)
+                    {
+
+                        PomodoroService.Notification.ShowNotification("🍅 Started Timer", $"Focus for {this.WorkMinutes} min!!!", "Blow");
+                    }
+                    break;
+
+                // Entering WorkPaused state
+                case TimerState.WorkPaused:
+                    // Calculate directly since IsRunning is already false at this point
+                    var remaining = this._endTime - DateTime.Now;
+                    this._remainingTime = remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+                    this._timer.Stop();
+                    PomodoroService.Notification.ShowNotification("⏸️ Paused Timer", $"{GetDisplayTime()} min remaining...", "Blow");
+                    break;
+
+                // Entering Stopped state
+                case TimerState.Stopped:
+                    this._timer.Stop();
+                    this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
+                    this.CompletedPomodoros = 0;
+                    PomodoroService.Notification.ShowNotification("❌ Stopped Timer", "Good work!", "Blow");
+                    break;
+            }
+
             OnStateChanged?.Invoke();
             OnTick?.Invoke();
         }
 
-        public void Skip()
+        // === Public Actions ===
+
+        /// <summary>
+        /// Start a new pomodoro session. Only valid from Stopped state.
+        /// </summary>
+        public void Start()
         {
-            if (this.CurrentState != PomodoroState.Inactive)
+            if (this.State == TimerState.Stopped)
             {
-                this.CompleteCurrentSession();
-                PomodoroService.Notification.ShowNotification($"🍅 {this.GetStateLabel()} skipped", "Are you cheating 👀?", "Blow");
+                this.TransitionToState(TimerState.WorkRunning);
             }
         }
 
-        private void CompleteCurrentSession()
+        /// <summary>
+        /// Pause the current timer. Only valid from WorkRunning state.
+        /// </summary>
+        public void Pause()
         {
-            this._timer.Stop();
-            this.IsRunning = false;
+            if (this.State == TimerState.WorkRunning)
+            {
+                this.TransitionToState(TimerState.WorkPaused);
+            }
+        }
 
-            var completedState = this.CurrentState;
-            OnSessionComplete?.Invoke(completedState);
+        /// <summary>
+        /// Resume the paused timer. Only valid from WorkPaused state.
+        /// </summary>
+        public void Resume()
+        {
+            if (this.State == TimerState.WorkPaused)
+            {
+                this.TransitionToState(TimerState.WorkRunning);
+            }
+        }
 
-            // Determine next state
-            if (this.CurrentState == PomodoroState.Work)
+        /// <summary>
+        /// Skip to the next phase. Work -> Break, Break -> Work.
+        /// </summary>
+        public void Skip()
+        {
+            if (this.State == TimerState.Stopped)
+            {
+                return;
+            }
+
+            TimerState newState;
+
+            if (this.Phase == PomodoroPhase.Work)
             {
                 this.CompletedPomodoros++;
-
-                if (this.CompletedPomodoros % PomodorosBeforeLongBreak == 0)
-                {
-                    this.CurrentState = PomodoroState.LongBreak;
-                    this._remainingTime = TimeSpan.FromMinutes(this.LongBreakMinutes);
-                }
-                else
-                {
-                    this.CurrentState = PomodoroState.ShortBreak;
-                    this._remainingTime = TimeSpan.FromMinutes(this.ShortBreakMinutes);
-                }
+                newState = (this.CompletedPomodoros % PomodorosBeforeLongBreak == 0)
+                    ? TimerState.LongBreak
+                    : TimerState.ShortBreak;
             }
             else
             {
                 // Break completed, start new work session
-                this.CurrentState = PomodoroState.Work;
-                this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
+                newState = TimerState.WorkRunning;
             }
 
-            OnStateChanged?.Invoke();
-            OnTick?.Invoke();
-
-            // Auto-start the next session
-            this._endTime = DateTime.Now + this._remainingTime;
-            this.IsRunning = true;
-            this._timer.Start();
+            this.TransitionToState(newState);
         }
 
+        /// <summary>
+        /// Stop the timer and reset to initial state.
+        /// </summary>
+        public void Stop()
+        {
+            this.TransitionToState(TimerState.Stopped);
+        }
+
+        /// <summary>
+        /// Convenience method: Toggle between running and paused/stopped states.
+        /// </summary>
+        public void Toggle()
+        {
+            if (this.State == TimerState.WorkRunning)
+            {
+                this.Pause();
+            }
+            else if (this.State == TimerState.WorkPaused)
+            {
+                this.Resume();
+            }
+            // ShortBreak and LongBreak cannot be paused - no-op
+        }
+
+        // === Display Helpers ===
         public String GetDisplayTime()
         {
             var time = this.RemainingTime;
             return $"{(Int32)time.TotalMinutes:D2}:{time.Seconds:D2}";
         }
 
-        public String GetStateLabel()
+        public String GetStateLabel() => this.Phase switch
         {
-            return this.CurrentState switch
-            {
-                PomodoroState.Inactive => "Ready",
-                PomodoroState.Work => "Focus",
-                PomodoroState.ShortBreak => "Break",
-                PomodoroState.LongBreak => "Long Break",
-                // Impossibruh :-)
-                _ => throw new ApplicationException()
-            };
-        }
+            PomodoroPhase.Stopped => "Ready",
+            PomodoroPhase.Work => "Focus",
+            PomodoroPhase.ShortBreak => "Break",
+            PomodoroPhase.LongBreak => "Long Break",
+            _ => throw new InvalidOperationException($"Unknown phase: {this.Phase}")
+        };
 
         public void Dispose()
         {
