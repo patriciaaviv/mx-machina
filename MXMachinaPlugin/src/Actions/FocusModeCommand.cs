@@ -17,7 +17,7 @@ namespace Loupedeck.MXMachinaPlugin
 
             if (this.FocusMode.IsEnabled)
             {
-                NotificationService.ShowNotification(
+                PomodoroService.Notification.ShowNotification(
                     "Focus Mode ON",
                     "Distracting apps closed.",
                     "Glass"
@@ -25,7 +25,7 @@ namespace Loupedeck.MXMachinaPlugin
             }
             else
             {
-                NotificationService.ShowNotification(
+                PomodoroService.Notification.ShowNotification(
                     "Focus Mode OFF",
                     "Focus mode disabled.",
                     "Purr"

@@ -26,7 +26,7 @@ namespace Loupedeck.MXMachinaPlugin
 
                 if (calendar.IsAuthenticated)
                 {
-                    NotificationService.ShowNotification(
+                    PomodoroService.Notification.ShowNotification(
                         "✅ Already Authenticated",
                         "Google Calendar is already connected.",
                         "Glass"
@@ -45,7 +45,7 @@ namespace Loupedeck.MXMachinaPlugin
 
                     if (String.IsNullOrEmpty(authUrl))
                     {
-                        NotificationService.ShowNotification(
+                        PomodoroService.Notification.ShowNotification(
                             "❌ Missing Credentials",
                             "secrets.json not found or invalid.",
                             "Basso"
@@ -60,7 +60,7 @@ namespace Loupedeck.MXMachinaPlugin
                         UseShellExecute = true
                     });
 
-                    NotificationService.ShowNotification(
+                    PomodoroService.Notification.ShowNotification(
                         "🔐 Authorization Required",
                         "Complete sign-in in your browser...",
                         "Purr"
@@ -76,7 +76,7 @@ namespace Loupedeck.MXMachinaPlugin
 
                         if (success)
                         {
-                            NotificationService.ShowNotification(
+                            PomodoroService.Notification.ShowNotification(
                                 "✅ Connected!",
                                 "Google Calendar is now linked.",
                                 "Hero"
@@ -85,7 +85,7 @@ namespace Loupedeck.MXMachinaPlugin
                         }
                         else
                         {
-                            NotificationService.ShowNotification(
+                            PomodoroService.Notification.ShowNotification(
                                 "❌ Auth Failed",
                                 "Could not complete authentication.",
                                 "Basso"
@@ -97,7 +97,7 @@ namespace Loupedeck.MXMachinaPlugin
                 catch (Exception ex)
                 {
                     PluginLog.Error(ex, "Google Calendar authentication error");
-                    NotificationService.ShowNotification(
+                    PomodoroService.Notification.ShowNotification(
                         "❌ Error",
                         "Authentication failed. Check logs.",
                         "Basso"
@@ -108,7 +108,7 @@ namespace Loupedeck.MXMachinaPlugin
             catch (Exception ex)
             {
                 PluginLog.Error(ex, "GoogleCalendarAuthCommand: Failed to start auth flow");
-                NotificationService.ShowNotification(
+                PomodoroService.Notification.ShowNotification(
                     "❌ Error",
                     "Failed to start authentication.",
                     "Basso"

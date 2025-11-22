@@ -3,12 +3,12 @@ namespace Loupedeck.MXMachinaPlugin
     using System;
     using System.Diagnostics;
 
-    public static class NotificationService
+    public class NotificationService
     {
         /// <summary>
         /// Shows a macOS notification with sound
         /// </summary>
-        public static void ShowNotification(String title, String message, String sound = "default")
+        public void ShowNotification(String title, String message, String sound = "default")
         {
             try
             {
@@ -25,7 +25,7 @@ namespace Loupedeck.MXMachinaPlugin
         /// <summary>
         /// Shows a floating notification overlay (using osascript)
         /// </summary>
-        public static void ShowOverlay(String message, PomodoroState state)
+        public void ShowOverlay(String message, PomodoroState state)
         {
             try
             {
@@ -56,7 +56,7 @@ namespace Loupedeck.MXMachinaPlugin
         /// <summary>
         /// Plays a sound alert
         /// </summary>
-        public static void PlaySound(String soundName = "Glass")
+        public void PlaySound(String soundName = "Glass")
         {
             try
             {
@@ -69,31 +69,31 @@ namespace Loupedeck.MXMachinaPlugin
             }
         }
 
-        /// <summary>
-        /// Shows timer started notification
-        /// </summary>
-        public static void NotifyTimerStarted(Int32 minutes, PomodoroState state)
-        {
-            var stateText = state switch
-            {
-                PomodoroState.Work => "Focus session",
-                PomodoroState.ShortBreak => "Short break",
-                PomodoroState.LongBreak => "Long break",
-                _ => "Timer"
-            };
-
-            ShowOverlay($"{stateText} for {minutes} minutes. Stay focused!", state);
-        }
+        // /// <summary>
+        // /// Shows timer started notification
+        // /// </summary>
+        // public void NotifyTimerStarted(Int32 minutes, PomodoroState state)
+        // {
+        //     var stateText = state switch
+        //     {
+        //         PomodoroState.Work => "Focus session",
+        //         PomodoroState.ShortBreak => "Short break",
+        //         PomodoroState.LongBreak => "Long break",
+        //         _ => "Timer"
+        //     };
+        //
+        //     ShowOverlay($"{stateText} for {minutes} minutes. Stay focused!", state);
+        // }
 
         /// <summary>
         /// Shows timer paused notification
         /// </summary>
-        public static void NotifyTimerPaused(String remainingTime) => ShowNotification("⏸️ Timer Paused", $"Remaining: {remainingTime}. Press again to resume.", "Tink");
+        public void NotifyTimerPaused(String remainingTime) => ShowNotification("⏸️ Timer Paused", $"Remaining: {remainingTime}. Press again to resume.", "Tink");
 
         /// <summary>
         /// Shows session complete notification
         /// </summary>
-        public static void NotifySessionComplete(PomodoroState completedState, Int32 completedCount)
+        public void NotifySessionComplete(PomodoroState completedState, Int32 completedCount)
         {
             switch (completedState)
             {
@@ -115,7 +115,7 @@ namespace Loupedeck.MXMachinaPlugin
             }
         }
 
-        private static void RunAppleScript(String script)
+        private void RunAppleScript(String script)
         {
             try
             {
@@ -149,7 +149,7 @@ namespace Loupedeck.MXMachinaPlugin
             }
         }
 
-        private static void RunAppleScriptAsync(String script)
+        private void RunAppleScriptAsync(String script)
         {
             try
             {
@@ -177,7 +177,7 @@ namespace Loupedeck.MXMachinaPlugin
             }
         }
 
-        private static String EscapeString(String input)
+        private String EscapeString(String input)
         {
             return input
                 .Replace("\\", "\\\\")

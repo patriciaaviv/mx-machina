@@ -116,10 +116,13 @@ namespace Loupedeck.MXMachinaPlugin
         {
             if (this.CurrentState == PomodoroState.Inactive)
             {
-                // Start a new work session
                 this.CurrentState = PomodoroState.Work;
                 this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
+                PomodoroService.Notification.ShowNotification("🍅 Timer started", $"Focus for {GetDisplayTime()} minutes!", "Blow");
                 OnStateChanged?.Invoke();
+            }
+            else {
+                PomodoroService.Notification.ShowNotification("🍅 Timer resumed", $"Focus for {GetDisplayTime()} minutes!", "Blow");
             }
 
             if (!this.IsRunning)
@@ -138,6 +141,7 @@ namespace Loupedeck.MXMachinaPlugin
                 this._remainingTime = this.RemainingTime;
                 this.IsRunning = false;
                 this._timer.Stop();
+                PomodoroService.Notification.ShowNotification("🍅 Timer paused", $"{GetDisplayTime()} minutes remaining...", "Blow");
                 OnTick?.Invoke();
             }
         }
@@ -161,6 +165,7 @@ namespace Loupedeck.MXMachinaPlugin
             this.CurrentState = PomodoroState.Inactive;
             this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
             this.CompletedPomodoros = 0;
+            PomodoroService.Notification.ShowNotification("🍅 Timer resetted", "Starting with fresh stats!", "Blow");
             OnStateChanged?.Invoke();
             OnTick?.Invoke();
         }
@@ -170,6 +175,7 @@ namespace Loupedeck.MXMachinaPlugin
             if (this.CurrentState != PomodoroState.Inactive)
             {
                 this.CompleteCurrentSession();
+                PomodoroService.Notification.ShowNotification($"🍅 {this.GetStateLabel()} skipped", "Are you cheating 👀?", "Blow");
             }
         }
 

@@ -44,8 +44,6 @@ namespace Loupedeck.MXMachinaPlugin
             PluginLog.Info($"Changed {actionParameter} Duration: {GetTimeFromActionParameter(actionParameter)} min");
 
             // Play subtle sound for successful adjustment
-            // TODO: Remove sound/replace with haptics
-            NotificationService.PlaySound("Tink");
             this.AdjustmentValueChanged();
         }
 
