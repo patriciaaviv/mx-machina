@@ -28,6 +28,7 @@ namespace Loupedeck.MXMachinaPlugin
         private String _clientSecret;
         private const String RedirectUri = "http://localhost:8080/callback";
         private const String Scope = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events";
+        private const String TokenFilePath = "/Users/Patricia/Desktop/mx-machina/MXMachinaPlugin/tokens.json";
 
         public Boolean IsAuthenticated => !String.IsNullOrEmpty(this._accessToken) && DateTime.Now < this._tokenExpiry;
 
@@ -35,6 +36,93 @@ namespace Loupedeck.MXMachinaPlugin
         {
             this._httpClient = new HttpClient();
             this.LoadSecrets();
+            this.LoadTokens();
+        }
+
+        private void SaveTokens()
+        {
+            try
+            {
+                var tokenData = new
+                {
+                    access_token = this._accessToken,
+                    refresh_token = this._refreshToken,
+                    token_expiry = this._tokenExpiry.ToString("o")
+                };
+
+                var json = JsonSerializer.Serialize(tokenData);
+                File.WriteAllText(TokenFilePath, json);
+                PluginLog.Info("OAuth tokens saved to file");
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "Failed to save OAuth tokens");
+            }
+        }
+
+        private void LoadTokens()
+        {
+            try
+            {
+                if (File.Exists(TokenFilePath))
+                {
+                    var json = File.ReadAllText(TokenFilePath);
+                    var tokenData = JsonSerializer.Deserialize<JsonElement>(json);
+
+                    this._accessToken = tokenData.GetProperty("access_token").GetString();
+                    this._refreshToken = tokenData.GetProperty("refresh_token").GetString();
+                    this._tokenExpiry = DateTime.Parse(tokenData.GetProperty("token_expiry").GetString());
+
+                    PluginLog.Info($"OAuth tokens loaded. Expiry: {this._tokenExpiry}");
+
+                    // Refresh if expired or about to expire
+                    if (DateTime.Now >= this._tokenExpiry && !String.IsNullOrEmpty(this._refreshToken))
+                    {
+                        PluginLog.Info("Token expired, refreshing...");
+                        _ = this.RefreshTokenAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "Failed to load OAuth tokens");
+            }
+        }
+
+        private async Task RefreshTokenAsync()
+        {
+            try
+            {
+                var content = new FormUrlEncodedContent(new Dictionary<String, String>
+                {
+                    ["client_id"] = this._clientId,
+                    ["client_secret"] = this._clientSecret,
+                    ["refresh_token"] = this._refreshToken,
+                    ["grant_type"] = "refresh_token"
+                });
+
+                var response = await this._httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var tokenData = JsonSerializer.Deserialize<JsonElement>(json);
+
+                    this._accessToken = tokenData.GetProperty("access_token").GetString();
+                    var expiresIn = tokenData.GetProperty("expires_in").GetInt32();
+                    this._tokenExpiry = DateTime.Now.AddSeconds(expiresIn - 60);
+
+                    this.SaveTokens();
+                    PluginLog.Info("OAuth token refreshed successfully");
+                }
+                else
+                {
+                    PluginLog.Error($"Failed to refresh token: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "Failed to refresh OAuth token");
+            }
         }
 
         private void LoadSecrets()
@@ -174,6 +262,7 @@ namespace Loupedeck.MXMachinaPlugin
                     var expiresIn = tokenData.GetProperty("expires_in").GetInt32();
                     this._tokenExpiry = DateTime.Now.AddSeconds(expiresIn - 60);
 
+                    this.SaveTokens();
                     return true;
                 }
             }
