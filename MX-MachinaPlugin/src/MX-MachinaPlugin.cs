@@ -1,10 +1,10 @@
-namespace Loupedeck.MX-MachinaPlugin
+namespace Loupedeck.MXMachinaPlugin
 {
     using System;
 
     // This class contains the plugin-level logic of the Loupedeck plugin.
 
-    public class MX-MachinaPlugin : Plugin
+    public class MXMachinaPlugin : Plugin
     {
         // Gets a value indicating whether this is an API-only plugin.
         public override Boolean UsesApplicationApiOnly => true;
@@ -13,7 +13,7 @@ namespace Loupedeck.MX-MachinaPlugin
         public override Boolean HasNoApplication => true;
 
         // Initializes a new instance of the plugin class.
-        public MX-MachinaPlugin()
+        public MXMachinaPlugin()
         {
             // Initialize the plugin log.
             PluginLog.Init(this.Log);

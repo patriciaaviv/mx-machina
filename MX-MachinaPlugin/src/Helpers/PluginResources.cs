@@ -1,4 +1,4 @@
-namespace Loupedeck.MX-MachinaPlugin
+namespace Loupedeck.MXMachinaPlugin
 {
     using System;
     using System.IO;

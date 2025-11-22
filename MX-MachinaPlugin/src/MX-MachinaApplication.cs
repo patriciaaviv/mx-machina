@@ -1,12 +1,12 @@
-namespace Loupedeck.MX-MachinaPlugin
+namespace Loupedeck.MXMachinaPlugin
 {
     using System;
 
     // This class can be used to connect the Loupedeck plugin to an application.
 
-    public class MX-MachinaApplication : ClientApplication
+    public class MXMachinaApplication : ClientApplication
     {
-        public MX-MachinaApplication()
+        public MXMachinaApplication()
         {
         }
 
