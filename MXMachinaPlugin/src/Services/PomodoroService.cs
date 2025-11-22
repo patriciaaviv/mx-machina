@@ -10,6 +10,7 @@ namespace Loupedeck.MXMachinaPlugin
         private static GoogleCalendarService _calendarService;
         private static ActivityMonitorService _activityMonitor;
         private static StatisticsService _statisticsService;
+        private static FocusModeService _focusModeService;
 
         public static PomodoroTimer Timer
         {
@@ -59,6 +60,18 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     _statisticsService ??= new StatisticsService();
                     return _statisticsService;
+                }
+            }
+        }
+
+        public static FocusModeService FocusMode
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    _focusModeService ??= new FocusModeService();
+                    return _focusModeService;
                 }
             }
         }
