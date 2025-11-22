@@ -6,19 +6,19 @@ namespace Loupedeck.MXMachinaPlugin
     {
         private PomodoroTimer Timer => PomodoroService.Timer;
 
-        private bool _eventsSubscribed = false;
+        private Boolean _eventsSubscribed = false;
 
         private void EnsureEventsSubscribed()
         {
-            if (!_eventsSubscribed)
+            if (!this._eventsSubscribed)
             {
-                Timer.OnTick += () => this.ActionImageChanged();
-                Timer.OnStateChanged += () => this.ActionImageChanged();
-                Timer.OnSessionComplete += (state) =>
+                this.Timer.OnTick += () => this.ActionImageChanged();
+                this.Timer.OnStateChanged += () => this.ActionImageChanged();
+                this.Timer.OnSessionComplete += (state) =>
                 {
                     PluginLog.Info($"Pomodoro session completed: {state}");
                 };
-                _eventsSubscribed = true;
+                this._eventsSubscribed = true;
             }
         }
 
@@ -33,28 +33,28 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override void RunCommand(String actionParameter)
         {
-            EnsureEventsSubscribed();
+            this.EnsureEventsSubscribed();
 
             switch (actionParameter)
             {
                 case "toggle":
-                    Timer.Toggle();
-                    PluginLog.Info($"Pomodoro {(Timer.IsRunning ? "started" : "paused")}: {Timer.GetDisplayTime()}");
+                    this.Timer.Toggle();
+                    PluginLog.Info($"Pomodoro {(this.Timer.IsRunning ? "started" : "paused")}: {this.Timer.GetDisplayTime()}");
                     break;
 
                 case "reset":
-                    Timer.Reset();
+                    this.Timer.Reset();
                     PluginLog.Info("Pomodoro timer reset");
                     break;
 
                 case "skip":
-                    Timer.Skip();
-                    PluginLog.Info($"Skipped to: {Timer.GetStateLabel()}");
+                    this.Timer.Skip();
+                    PluginLog.Info($"Skipped to: {this.Timer.GetStateLabel()}");
                     break;
 
                 default:
                     // Default action is toggle
-                    Timer.Toggle();
+                    this.Timer.Toggle();
                     break;
             }
 
@@ -63,7 +63,7 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override BitmapImage GetCommandImage(String actionParameter, PluginImageSize imageSize)
         {
-            EnsureEventsSubscribed();
+            this.EnsureEventsSubscribed();
 
             var builder = new BitmapBuilder(imageSize);
 
@@ -72,15 +72,15 @@ namespace Loupedeck.MXMachinaPlugin
             BitmapColor textColor = BitmapColor.White;
             BitmapColor accentColor;
 
-            switch (Timer.CurrentState)
+            switch (this.Timer.CurrentState)
             {
                 case PomodoroState.Work:
-                    bgColor = Timer.IsRunning ? new BitmapColor(200, 60, 60) : new BitmapColor(120, 40, 40);
+                    bgColor = this.Timer.IsRunning ? new BitmapColor(200, 60, 60) : new BitmapColor(120, 40, 40);
                     accentColor = new BitmapColor(255, 100, 100);
                     break;
                 case PomodoroState.ShortBreak:
                 case PomodoroState.LongBreak:
-                    bgColor = Timer.IsRunning ? new BitmapColor(60, 160, 60) : new BitmapColor(40, 100, 40);
+                    bgColor = this.Timer.IsRunning ? new BitmapColor(60, 160, 60) : new BitmapColor(40, 100, 40);
                     accentColor = new BitmapColor(100, 255, 100);
                     break;
                 default:
@@ -92,8 +92,8 @@ namespace Loupedeck.MXMachinaPlugin
             builder.Clear(bgColor);
 
             // Determine what to display
-            string displayText;
-            string labelText;
+            String displayText;
+            String labelText;
 
             switch (actionParameter)
             {
@@ -106,8 +106,8 @@ namespace Loupedeck.MXMachinaPlugin
                     labelText = "Skip";
                     break;
                 default: // toggle
-                    displayText = Timer.GetDisplayTime();
-                    labelText = Timer.GetStateLabel();
+                    displayText = this.Timer.GetDisplayTime();
+                    labelText = this.Timer.GetStateLabel();
                     break;
             }
 
@@ -118,14 +118,14 @@ namespace Loupedeck.MXMachinaPlugin
             builder.DrawText(displayText, 0, 25, builder.Width, 30, textColor, 18);
 
             // Draw pomodoro count at bottom for toggle button
-            if (actionParameter == "toggle" || string.IsNullOrEmpty(actionParameter))
+            if (actionParameter == "toggle" || String.IsNullOrEmpty(actionParameter))
             {
-                var pomoText = $"{Timer.CompletedPomodoros}/4";
+                var pomoText = $"{this.Timer.CompletedPomodoros}/4";
                 builder.DrawText(pomoText, 0, 55, builder.Width, 20, accentColor, 10);
             }
 
             // Draw running indicator
-            if (Timer.IsRunning && (actionParameter == "toggle" || string.IsNullOrEmpty(actionParameter)))
+            if (this.Timer.IsRunning && (actionParameter == "toggle" || String.IsNullOrEmpty(actionParameter)))
             {
                 builder.FillRectangle(builder.Width - 12, 4, 8, 8, accentColor);
             }
@@ -139,7 +139,7 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 "reset" => "Reset",
                 "skip" => "Skip",
-                _ => $"{Timer.GetStateLabel()}{Environment.NewLine}{Timer.GetDisplayTime()}"
+                _ => $"{this.Timer.GetStateLabel()}{Environment.NewLine}{this.Timer.GetDisplayTime()}"
             };
         }
     }

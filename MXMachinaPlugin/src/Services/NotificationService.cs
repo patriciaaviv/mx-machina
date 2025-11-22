@@ -110,10 +110,7 @@ namespace Loupedeck.MXMachinaPlugin
         /// <summary>
         /// Shows timer paused notification
         /// </summary>
-        public static void NotifyTimerPaused(String remainingTime)
-        {
-            ShowNotification("⏸️ Timer Paused", $"Remaining: {remainingTime}. Press again to resume.", "Tink");
-        }
+        public static void NotifyTimerPaused(String remainingTime) => ShowNotification("⏸️ Timer Paused", $"Remaining: {remainingTime}. Press again to resume.", "Tink");
 
         /// <summary>
         /// Shows session complete notification

@@ -21,39 +21,39 @@ namespace Loupedeck.MXMachinaPlugin
 
         private void EnsureEventsSubscribed()
         {
-            if (!_eventsSubscribed)
+            if (!this._eventsSubscribed)
             {
-                Timer.OnTick += () => this.ActionImageChanged();
-                Timer.OnStateChanged += () => this.ActionImageChanged();
-                ActivityMonitor.OnBreakSuggested += (suggestion) => this.ActionImageChanged();
-                _eventsSubscribed = true;
+                this.Timer.OnTick += () => this.ActionImageChanged();
+                this.Timer.OnStateChanged += () => this.ActionImageChanged();
+                this.ActivityMonitor.OnBreakSuggested += (suggestion) => this.ActionImageChanged();
+                this._eventsSubscribed = true;
             }
         }
 
         protected override void RunCommand(String actionParameter)
         {
-            EnsureEventsSubscribed();
+            this.EnsureEventsSubscribed();
 
             switch (actionParameter)
             {
                 case "smartStart":
-                    SmartStart();
+                    this.SmartStart();
                     break;
 
                 case "insights":
-                    ShowInsights();
+                    this.ShowInsights();
                     break;
 
                 case "calendarSync":
-                    SyncWithCalendar();
+                    this.SyncWithCalendar();
                     break;
 
                 case "suggestDuration":
-                    SuggestOptimalDuration();
+                    this.SuggestOptimalDuration();
                     break;
 
                 default:
-                    SmartStart();
+                    this.SmartStart();
                     break;
             }
 
@@ -62,32 +62,32 @@ namespace Loupedeck.MXMachinaPlugin
 
         private void SmartStart()
         {
-            if (Timer.IsRunning)
+            if (this.Timer.IsRunning)
             {
-                Timer.Pause();
+                this.Timer.Pause();
                 PluginLog.Info("Smart Pomodoro paused");
             }
             else
             {
                 // Get optimal duration based on activity patterns
-                var optimalDuration = ActivityMonitor.GetOptimalWorkDuration();
+                var optimalDuration = this.ActivityMonitor.GetOptimalWorkDuration();
 
-                if (Timer.CurrentState == PomodoroState.Stopped)
+                if (this.Timer.CurrentState == PomodoroState.Stopped)
                 {
                     // Apply smart duration suggestion
-                    Timer.WorkMinutes = optimalDuration;
+                    this.Timer.WorkMinutes = optimalDuration;
                     PluginLog.Info($"Starting with AI-suggested duration: {optimalDuration} min");
                 }
 
-                Timer.Start();
-                ActivityMonitor.StartMonitoring();
-                PluginLog.Info($"Smart Pomodoro started: {Timer.GetDisplayTime()}");
+                this.Timer.Start();
+                this.ActivityMonitor.StartMonitoring();
+                PluginLog.Info($"Smart Pomodoro started: {this.Timer.GetDisplayTime()}");
             }
         }
 
         private void ShowInsights()
         {
-            var insight = ActivityMonitor.GetProductivityInsight();
+            var insight = this.ActivityMonitor.GetProductivityInsight();
             PluginLog.Info($"Productivity Insight: {insight}");
 
             // Could also trigger a notification or display update
@@ -95,7 +95,7 @@ namespace Loupedeck.MXMachinaPlugin
 
         private async void SyncWithCalendar()
         {
-            if (!Calendar.IsAuthenticated)
+            if (!this.Calendar.IsAuthenticated)
             {
                 PluginLog.Warning("Calendar not authenticated. Please set up Google Calendar integration.");
                 return;
@@ -103,17 +103,17 @@ namespace Loupedeck.MXMachinaPlugin
 
             try
             {
-                var nextEvent = await Calendar.GetNextEventAsync();
+                var nextEvent = await this.Calendar.GetNextEventAsync();
                 if (nextEvent != null)
                 {
                     var timeUntil = nextEvent.Start - DateTime.Now;
-                    if (timeUntil.TotalMinutes > 0 && timeUntil.TotalMinutes < Timer.WorkMinutes)
+                    if (timeUntil.TotalMinutes > 0 && timeUntil.TotalMinutes < this.Timer.WorkMinutes)
                     {
                         // Adjust work duration to fit before next meeting
                         var adjustedMinutes = (Int32)timeUntil.TotalMinutes - 5; // 5 min buffer
                         if (adjustedMinutes >= 10)
                         {
-                            Timer.WorkMinutes = adjustedMinutes;
+                            this.Timer.WorkMinutes = adjustedMinutes;
                             PluginLog.Info($"Adjusted work duration to {adjustedMinutes} min to fit before '{nextEvent.Title}'");
                         }
                         else
@@ -139,12 +139,12 @@ namespace Loupedeck.MXMachinaPlugin
 
         private void SuggestOptimalDuration()
         {
-            var suggested = ActivityMonitor.GetOptimalWorkDuration();
-            Timer.WorkMinutes = suggested;
+            var suggested = this.ActivityMonitor.GetOptimalWorkDuration();
+            this.Timer.WorkMinutes = suggested;
 
-            if (Timer.CurrentState == PomodoroState.Stopped)
+            if (this.Timer.CurrentState == PomodoroState.Stopped)
             {
-                Timer.Reset(); // Apply new duration
+                this.Timer.Reset(); // Apply new duration
             }
 
             PluginLog.Info($"Applied AI-suggested work duration: {suggested} min");
@@ -152,7 +152,7 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override BitmapImage GetCommandImage(String actionParameter, PluginImageSize imageSize)
         {
-            EnsureEventsSubscribed();
+            this.EnsureEventsSubscribed();
 
             var builder = new BitmapBuilder(imageSize);
 
@@ -164,7 +164,7 @@ namespace Loupedeck.MXMachinaPlugin
             switch (actionParameter)
             {
                 case "smartStart":
-                    bgColor = Timer.IsRunning ? new BitmapColor(100, 50, 180) : new BitmapColor(60, 30, 120);
+                    bgColor = this.Timer.IsRunning ? new BitmapColor(100, 50, 180) : new BitmapColor(60, 30, 120);
                     accentColor = new BitmapColor(180, 130, 255);
                     break;
                 case "insights":
@@ -185,34 +185,34 @@ namespace Loupedeck.MXMachinaPlugin
 
             String label;
             String mainText;
-            String subText = "";
+            var subText = "";
 
             switch (actionParameter)
             {
                 case "smartStart":
                     label = "Smart";
-                    mainText = Timer.GetDisplayTime();
-                    subText = Timer.IsRunning ? "Running" : "Ready";
+                    mainText = this.Timer.GetDisplayTime();
+                    subText = this.Timer.IsRunning ? "Running" : "Ready";
                     break;
                 case "insights":
                     label = "Insights";
-                    var activityLevel = ActivityMonitor.CurrentActivityLevel;
+                    var activityLevel = this.ActivityMonitor.CurrentActivityLevel;
                     mainText = activityLevel > 70 ? "High" : activityLevel > 40 ? "Med" : "Low";
                     subText = "Activity";
                     break;
                 case "calendarSync":
                     label = "Calendar";
                     mainText = "Sync";
-                    subText = Calendar.IsAuthenticated ? "Ready" : "Setup";
+                    subText = this.Calendar.IsAuthenticated ? "Ready" : "Setup";
                     break;
                 case "suggestDuration":
                     label = "AI";
-                    mainText = $"{ActivityMonitor.GetOptimalWorkDuration()}m";
+                    mainText = $"{this.ActivityMonitor.GetOptimalWorkDuration()}m";
                     subText = "Suggest";
                     break;
                 default:
                     label = "Smart";
-                    mainText = Timer.GetDisplayTime();
+                    mainText = this.Timer.GetDisplayTime();
                     subText = "";
                     break;
             }
@@ -239,10 +239,10 @@ namespace Loupedeck.MXMachinaPlugin
         {
             return actionParameter switch
             {
-                "smartStart" => $"Smart{Environment.NewLine}{Timer.GetDisplayTime()}",
-                "insights" => $"Insights{Environment.NewLine}{ActivityMonitor.GetProductivityInsight()}",
+                "smartStart" => $"Smart{Environment.NewLine}{this.Timer.GetDisplayTime()}",
+                "insights" => $"Insights{Environment.NewLine}{this.ActivityMonitor.GetProductivityInsight()}",
                 "calendarSync" => "Calendar Sync",
-                "suggestDuration" => $"AI Suggest{Environment.NewLine}{ActivityMonitor.GetOptimalWorkDuration()}m",
+                "suggestDuration" => $"AI Suggest{Environment.NewLine}{this.ActivityMonitor.GetOptimalWorkDuration()}m",
                 _ => "Smart Pomodoro"
             };
         }

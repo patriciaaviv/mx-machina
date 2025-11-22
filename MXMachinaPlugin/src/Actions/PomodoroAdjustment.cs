@@ -6,15 +6,15 @@ namespace Loupedeck.MXMachinaPlugin
     {
         private PomodoroTimer Timer => PomodoroService.Timer;
 
-        private bool _eventsSubscribed = false;
+        private Boolean _eventsSubscribed = false;
 
         private void EnsureEventsSubscribed()
         {
-            if (!_eventsSubscribed)
+            if (!this._eventsSubscribed)
             {
-                Timer.OnTick += () => this.AdjustmentValueChanged();
-                Timer.OnStateChanged += () => this.AdjustmentValueChanged();
-                _eventsSubscribed = true;
+                this.Timer.OnTick += () => this.AdjustmentValueChanged();
+                this.Timer.OnStateChanged += () => this.AdjustmentValueChanged();
+                this._eventsSubscribed = true;
             }
         }
 
@@ -29,10 +29,10 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override void ApplyAdjustment(String actionParameter, Int32 diff)
         {
-            EnsureEventsSubscribed();
+            this.EnsureEventsSubscribed();
 
             // Only allow adjustment when timer is stopped
-            if (Timer.IsRunning)
+            if (this.Timer.IsRunning)
             {
                 PluginLog.Info("Cannot adjust duration while timer is running");
                 return;
@@ -41,30 +41,30 @@ namespace Loupedeck.MXMachinaPlugin
             switch (actionParameter)
             {
                 case "work":
-                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + (diff * 5), 5, 60);
-                    if (Timer.CurrentState == PomodoroState.Stopped || Timer.CurrentState == PomodoroState.Work)
+                    this.Timer.WorkMinutes = Math.Clamp(this.Timer.WorkMinutes + diff * 5, 5, 60);
+                    if (this.Timer.CurrentState == PomodoroState.Stopped || this.Timer.CurrentState == PomodoroState.Work)
                     {
-                        Timer.Reset(); // Reset to apply new duration
+                        this.Timer.Reset(); // Reset to apply new duration
                     }
-                    PluginLog.Info($"Work duration: {Timer.WorkMinutes} min");
+                    PluginLog.Info($"Work duration: {this.Timer.WorkMinutes} min");
                     break;
 
                 case "shortBreak":
-                    Timer.ShortBreakMinutes = Math.Clamp(Timer.ShortBreakMinutes + (diff * 5), 5, 30);
-                    PluginLog.Info($"Short break duration: {Timer.ShortBreakMinutes} min");
+                    this.Timer.ShortBreakMinutes = Math.Clamp(this.Timer.ShortBreakMinutes + diff * 5, 5, 30);
+                    PluginLog.Info($"Short break duration: {this.Timer.ShortBreakMinutes} min");
                     break;
 
                 case "longBreak":
-                    Timer.LongBreakMinutes = Math.Clamp(Timer.LongBreakMinutes + (diff * 5), 5, 60);
-                    PluginLog.Info($"Long break duration: {Timer.LongBreakMinutes} min");
+                    this.Timer.LongBreakMinutes = Math.Clamp(this.Timer.LongBreakMinutes + diff * 5, 5, 60);
+                    PluginLog.Info($"Long break duration: {this.Timer.LongBreakMinutes} min");
                     break;
 
                 default:
                     // Default to work duration
-                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + (diff * 5), 5, 60);
-                    if (Timer.CurrentState == PomodoroState.Stopped)
+                    this.Timer.WorkMinutes = Math.Clamp(this.Timer.WorkMinutes + diff * 5, 5, 60);
+                    if (this.Timer.CurrentState == PomodoroState.Stopped)
                     {
-                        Timer.Reset();
+                        this.Timer.Reset();
                     }
                     break;
             }
@@ -78,29 +78,29 @@ namespace Loupedeck.MXMachinaPlugin
             switch (actionParameter)
             {
                 case "work":
-                    Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
-                    if (Timer.CurrentState == PomodoroState.Stopped)
+                    this.Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
+                    if (this.Timer.CurrentState == PomodoroState.Stopped)
                     {
-                        Timer.Reset();
+                        this.Timer.Reset();
                     }
-                    PluginLog.Info($"Work duration reset to {Timer.WorkMinutes} min");
+                    PluginLog.Info($"Work duration reset to {this.Timer.WorkMinutes} min");
                     break;
 
                 case "shortBreak":
-                    Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
-                    PluginLog.Info($"Short break reset to {Timer.ShortBreakMinutes} min");
+                    this.Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
+                    PluginLog.Info($"Short break reset to {this.Timer.ShortBreakMinutes} min");
                     break;
 
                 case "longBreak":
-                    Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
-                    PluginLog.Info($"Long break reset to {Timer.LongBreakMinutes} min");
+                    this.Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
+                    PluginLog.Info($"Long break reset to {this.Timer.LongBreakMinutes} min");
                     break;
 
                 default:
-                    Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
-                    Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
-                    Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
-                    Timer.Reset();
+                    this.Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
+                    this.Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
+                    this.Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
+                    this.Timer.Reset();
                     PluginLog.Info("All durations reset to defaults");
                     break;
             }
@@ -112,10 +112,10 @@ namespace Loupedeck.MXMachinaPlugin
         {
             return actionParameter switch
             {
-                "work" => $"{Timer.WorkMinutes} min",
-                "shortBreak" => $"{Timer.ShortBreakMinutes} min",
-                "longBreak" => $"{Timer.LongBreakMinutes} min",
-                _ => $"{Timer.WorkMinutes} min"
+                "work" => $"{this.Timer.WorkMinutes} min",
+                "shortBreak" => $"{this.Timer.ShortBreakMinutes} min",
+                "longBreak" => $"{this.Timer.LongBreakMinutes} min",
+                _ => $"{this.Timer.WorkMinutes} min"
             };
         }
 
@@ -129,7 +129,7 @@ namespace Loupedeck.MXMachinaPlugin
                 _ => "Work"
             };
 
-            return $"{label}{Environment.NewLine}{GetAdjustmentValue(actionParameter)}";
+            return $"{label}{Environment.NewLine}{this.GetAdjustmentValue(actionParameter)}";
         }
     }
 }

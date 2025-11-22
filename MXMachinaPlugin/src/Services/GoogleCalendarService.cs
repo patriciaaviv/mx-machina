@@ -28,12 +28,9 @@ namespace Loupedeck.MXMachinaPlugin
         private const String RedirectUri = "http://localhost:8080/callback";
         private const String Scope = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events";
 
-        public Boolean IsAuthenticated => !String.IsNullOrEmpty(_accessToken) && DateTime.Now < _tokenExpiry;
+        public Boolean IsAuthenticated => !String.IsNullOrEmpty(this._accessToken) && DateTime.Now < this._tokenExpiry;
 
-        public GoogleCalendarService()
-        {
-            _httpClient = new HttpClient();
-        }
+        public GoogleCalendarService() => this._httpClient = new HttpClient();
 
         public String GetAuthorizationUrl()
         {
@@ -59,16 +56,16 @@ namespace Loupedeck.MXMachinaPlugin
                     ["grant_type"] = "authorization_code"
                 });
 
-                var response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
+                var response = await this._httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     var tokenData = JsonSerializer.Deserialize<JsonElement>(json);
 
-                    _accessToken = tokenData.GetProperty("access_token").GetString();
-                    _refreshToken = tokenData.GetProperty("refresh_token").GetString();
+                    this._accessToken = tokenData.GetProperty("access_token").GetString();
+                    this._refreshToken = tokenData.GetProperty("refresh_token").GetString();
                     var expiresIn = tokenData.GetProperty("expires_in").GetInt32();
-                    _tokenExpiry = DateTime.Now.AddSeconds(expiresIn - 60);
+                    this._tokenExpiry = DateTime.Now.AddSeconds(expiresIn - 60);
 
                     return true;
                 }
@@ -85,7 +82,7 @@ namespace Loupedeck.MXMachinaPlugin
         {
             var events = new List<CalendarEvent>();
 
-            if (!IsAuthenticated)
+            if (!this.IsAuthenticated)
             {
                 PluginLog.Warning("Not authenticated with Google Calendar");
                 return events;
@@ -101,9 +98,9 @@ namespace Loupedeck.MXMachinaPlugin
                           $"singleEvents=true&orderBy=startTime";
 
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
-                request.Headers.Add("Authorization", $"Bearer {_accessToken}");
+                request.Headers.Add("Authorization", $"Bearer {this._accessToken}");
 
-                var response = await _httpClient.SendAsync(request);
+                var response = await this._httpClient.SendAsync(request);
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -157,7 +154,7 @@ namespace Loupedeck.MXMachinaPlugin
 
         public async Task<Boolean> CreateFocusBlockAsync(DateTime start, Int32 durationMinutes, String title = "Focus Time")
         {
-            if (!IsAuthenticated)
+            if (!this.IsAuthenticated)
             {
                 return false;
             }
@@ -186,10 +183,10 @@ namespace Loupedeck.MXMachinaPlugin
 
                 var request = new HttpRequestMessage(HttpMethod.Post,
                     "https://www.googleapis.com/calendar/v3/calendars/primary/events");
-                request.Headers.Add("Authorization", $"Bearer {_accessToken}");
+                request.Headers.Add("Authorization", $"Bearer {this._accessToken}");
                 request.Content = content;
 
-                var response = await _httpClient.SendAsync(request);
+                var response = await this._httpClient.SendAsync(request);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -201,13 +198,13 @@ namespace Loupedeck.MXMachinaPlugin
 
         public async Task<CalendarEvent> GetNextEventAsync()
         {
-            var events = await GetUpcomingEventsAsync(1);
+            var events = await this.GetUpcomingEventsAsync(1);
             return events.Count > 0 ? events[0] : null;
         }
 
         public async Task<Boolean> HasConflictAsync(DateTime start, Int32 durationMinutes)
         {
-            var events = await GetUpcomingEventsAsync(20);
+            var events = await this.GetUpcomingEventsAsync(20);
             var end = start.AddMinutes(durationMinutes);
 
             foreach (var evt in events)
