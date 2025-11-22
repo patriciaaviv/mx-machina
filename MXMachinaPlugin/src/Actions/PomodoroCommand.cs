@@ -2,7 +2,7 @@ namespace Loupedeck.MXMachinaPlugin
 {
     using System;
 
-    public class PomodoroCommand : PluginDynamicCommand
+    public class PomodoroCommand : PluginMultistateDynamicCommand
     {
         private PomodoroTimer Timer => PomodoroService.Timer;
 
@@ -25,10 +25,9 @@ namespace Loupedeck.MXMachinaPlugin
         public PomodoroCommand()
             : base(displayName: "Pomodoro Timer", description: "Start/Pause pomodoro timer", groupName: "Pomodoro")
         {
-            // Add action parameters for different controls
-            this.AddParameter("toggle", "Start/Pause", "Pomodoro");
-            this.AddParameter("reset", "Reset Timer", "Pomodoro");
-            this.AddParameter("skip", "Skip Session", "Pomodoro");
+            this.AddState("toggle", "Start/Pause", "Pomodoro");
+            this.AddState("reset", "Reset Timer", "Pomodoro");
+            this.AddState("skip", "Skip Session", "Pomodoro");
         }
 
         protected override void RunCommand(String actionParameter)

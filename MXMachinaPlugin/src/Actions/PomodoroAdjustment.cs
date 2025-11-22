@@ -19,12 +19,12 @@ namespace Loupedeck.MXMachinaPlugin
         }
 
         public PomodoroAdjustment()
-            : base(displayName: "Reset Timer", description: "Adjust duration, press to reset", groupName: "Pomodoro", hasReset: true)
+            : base(displayName: "Timer Settings", description: "Adjust duration, press to reset", groupName: "Pomodoro", hasReset: true)
         {
             // Add parameters for different duration adjustments
-            this.AddParameter("work", "Work Duration", "Pomodoro");
-            this.AddParameter("shortBreak", "Short Break", "Pomodoro");
-            this.AddParameter("longBreak", "Long Break", "Pomodoro");
+            this.AddParameter("Work", "Work Duration", "Pomodoro");
+            this.AddParameter("ShortBreak", "Short Break", "Pomodoro");
+            this.AddParameter("LongBreak", "Long Break", "Pomodoro");
         }
 
         protected override void ApplyAdjustment(String actionParameter, Int32 diff)
@@ -47,7 +47,7 @@ namespace Loupedeck.MXMachinaPlugin
 
             switch (actionParameter)
             {
-                case "work":
+                case "Work":
                     this.Timer.WorkMinutes = Math.Clamp(this.Timer.WorkMinutes + diff * 5, 5, 60);
                     if (this.Timer.CurrentState == PomodoroState.Stopped || this.Timer.CurrentState == PomodoroState.Work)
                     {
@@ -56,12 +56,12 @@ namespace Loupedeck.MXMachinaPlugin
                     PluginLog.Info($"Work duration: {this.Timer.WorkMinutes} min");
                     break;
 
-                case "shortBreak":
+                case "ShortBreak":
                     this.Timer.ShortBreakMinutes = Math.Clamp(this.Timer.ShortBreakMinutes + diff * 5, 5, 30);
                     PluginLog.Info($"Short break duration: {this.Timer.ShortBreakMinutes} min");
                     break;
 
-                case "longBreak":
+                case "LongBreak":
                     this.Timer.LongBreakMinutes = Math.Clamp(this.Timer.LongBreakMinutes + diff * 5, 5, 60);
                     PluginLog.Info($"Long break duration: {this.Timer.LongBreakMinutes} min");
                     break;
@@ -87,7 +87,7 @@ namespace Loupedeck.MXMachinaPlugin
             // Reset to default values when dial is pressed
             switch (actionParameter)
             {
-                case "work":
+                case "Work":
                     this.Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
                     if (this.Timer.CurrentState == PomodoroState.Stopped)
                     {
@@ -96,12 +96,12 @@ namespace Loupedeck.MXMachinaPlugin
                     PluginLog.Info($"Work duration reset to {this.Timer.WorkMinutes} min");
                     break;
 
-                case "shortBreak":
+                case "ShortBreak":
                     this.Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
                     PluginLog.Info($"Short break reset to {this.Timer.ShortBreakMinutes} min");
                     break;
 
-                case "longBreak":
+                case "LongBreak":
                     this.Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
                     PluginLog.Info($"Long break reset to {this.Timer.LongBreakMinutes} min");
                     break;
@@ -125,9 +125,9 @@ namespace Loupedeck.MXMachinaPlugin
         {
             return actionParameter switch
             {
-                "work" => $"{this.Timer.WorkMinutes} min",
-                "shortBreak" => $"{this.Timer.ShortBreakMinutes} min",
-                "longBreak" => $"{this.Timer.LongBreakMinutes} min",
+                "Work" => $"{this.Timer.WorkMinutes} min",
+                "ShortBreak" => $"{this.Timer.ShortBreakMinutes} min",
+                "LongBreak" => $"{this.Timer.LongBreakMinutes} min",
                 _ => $"{this.Timer.WorkMinutes} min"
             };
         }
@@ -136,9 +136,9 @@ namespace Loupedeck.MXMachinaPlugin
         {
             var label = actionParameter switch
             {
-                "work" => "Work",
-                "shortBreak" => "Break",
-                "longBreak" => "Long",
+                "Work" => "Work",
+                "ShortBreak" => "Break",
+                "LongBreak" => "Long",
                 _ => "Work"
             };
 
