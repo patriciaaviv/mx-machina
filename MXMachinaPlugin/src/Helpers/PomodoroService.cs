@@ -6,6 +6,9 @@ namespace Loupedeck.MXMachinaPlugin
     internal static class PomodoroService
     {
         private static readonly Object _lock = new Object();
+        private static PomodoroTimer _timer;
+        private static GoogleCalendarService _calendarService;
+        private static ActivityMonitorService _activityMonitor;
 
         public static PomodoroTimer Timer
         {
@@ -13,12 +16,12 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 lock (_lock)
                 {
-                    if (field == null)
+                    if (_timer == null)
                     {
-                        field = new PomodoroTimer();
+                        _timer = new PomodoroTimer();
                         InitializeSmartFeatures();
                     }
-                    return field;
+                    return _timer;
                 }
             }
         }
@@ -29,8 +32,8 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 lock (_lock)
                 {
-                    field ??= new GoogleCalendarService();
-                    return field;
+                    _calendarService ??= new GoogleCalendarService();
+                    return _calendarService;
                 }
             }
         }
@@ -41,8 +44,8 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 lock (_lock)
                 {
-                    field ??= new ActivityMonitorService();
-                    return field;
+                    _activityMonitor ??= new ActivityMonitorService();
+                    return _activityMonitor;
                 }
             }
         }
