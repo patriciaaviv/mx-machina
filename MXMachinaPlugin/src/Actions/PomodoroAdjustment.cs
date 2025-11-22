@@ -30,14 +30,6 @@ namespace Loupedeck.MXMachinaPlugin
             // Only allow adjustment when timer is stopped
             if (this.Timer.IsRunning)
             {
-                PluginLog.Info("Cannot adjust duration while timer is running");
-
-                // Show notification with error sound to indicate action is blocked
-                NotificationService.ShowNotification(
-                    "⚠️ Timer Running",
-                    "Pause the timer first to adjust duration.",
-                    "Basso"
-                );
                 return;
             }
 
@@ -74,66 +66,36 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override void RunCommand(String actionParameter)
         {
-            PluginLog.Info("HS");
-            // Reset to default values when dial is pressed
-            switch (actionParameter)
-            {
-                case "Work":
-                    this.Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
-                    if (this.Timer.CurrentState == PomodoroState.Inactive)
-                    {
-                        this.Timer.Reset();
-                    }
-                    PluginLog.Info($"Work duration reset to {this.Timer.WorkMinutes} min");
-                    break;
-
-                case "ShortBreak":
-                    this.Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
-                    PluginLog.Info($"Short break reset to {this.Timer.ShortBreakMinutes} min");
-                    break;
-
-                case "LongBreak":
-                    this.Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
-                    PluginLog.Info($"Long break reset to {this.Timer.LongBreakMinutes} min");
-                    break;
-
-                default:
-                    this.Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
-                    this.Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
-                    this.Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
-                    this.Timer.Reset();
-                    PluginLog.Info("All durations reset to defaults");
-                    break;
-            }
-
+            this.Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
+            this.Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
+            this.Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
+            this.Timer.Reset();
+            PluginLog.Info("All durations reset to defaults");
             // Play sound for successful reset
             NotificationService.PlaySound("Hero");
-
             this.AdjustmentValueChanged();
         }
 
         protected override String GetAdjustmentValue(String actionParameter)
         {
-            return actionParameter switch
+            var time = this.Timer.CurrentState switch
             {
-                "Work" => $"{this.Timer.WorkMinutes} min",
-                "ShortBreak" => $"{this.Timer.ShortBreakMinutes} min",
-                "LongBreak" => $"{this.Timer.LongBreakMinutes} min",
-                _ => $"{this.Timer.WorkMinutes} min"
+                PomodoroState.ShortBreak => this.Timer.ShortBreakMinutes,
+                PomodoroState.LongBreak => this.Timer.LongBreakMinutes,
+                _ => this.Timer.WorkMinutes
             };
+            return $"{time} min";
         }
 
         protected override String GetAdjustmentDisplayName(String actionParameter, PluginImageSize imageSize)
         {
-            var label = actionParameter switch
+            return this.Timer.CurrentState switch
             {
-                "Work" => "Work",
-                "ShortBreak" => "Break",
-                "LongBreak" => "Long",
-                _ => "Work"
+                PomodoroState.Inactive => "Change Work Time",
+                PomodoroState.ShortBreak => "Change Short Break Time",
+                PomodoroState.LongBreak => "Change Long Break Time",
+                _ => "Disabled"
             };
-
-            return $"{label}{Environment.NewLine}{this.GetAdjustmentValue(actionParameter)}";
         }
     }
 }
