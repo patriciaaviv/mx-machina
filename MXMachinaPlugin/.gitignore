@@ -399,5 +399,6 @@ FodyWeavers.xsd
 
 .DS_Store
 
-# Secrets (OAuth credentials)
+# Secrets (OAuth credentials and tokens)
 secrets.json
+tokens.json
