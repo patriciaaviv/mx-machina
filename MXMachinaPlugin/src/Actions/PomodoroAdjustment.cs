@@ -41,7 +41,7 @@ namespace Loupedeck.MXMachinaPlugin
             switch (actionParameter)
             {
                 case "work":
-                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + (diff * 5), 1, 60);
+                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + (diff * 5), 5, 60);
                     if (Timer.CurrentState == PomodoroState.Stopped || Timer.CurrentState == PomodoroState.Work)
                     {
                         Timer.Reset(); // Reset to apply new duration
@@ -50,18 +50,18 @@ namespace Loupedeck.MXMachinaPlugin
                     break;
 
                 case "shortBreak":
-                    Timer.ShortBreakMinutes = Math.Clamp(Timer.ShortBreakMinutes + (diff * 5), 1, 30);
+                    Timer.ShortBreakMinutes = Math.Clamp(Timer.ShortBreakMinutes + (diff * 5), 5, 30);
                     PluginLog.Info($"Short break duration: {Timer.ShortBreakMinutes} min");
                     break;
 
                 case "longBreak":
-                    Timer.LongBreakMinutes = Math.Clamp(Timer.LongBreakMinutes + (diff * 5), 1, 60);
+                    Timer.LongBreakMinutes = Math.Clamp(Timer.LongBreakMinutes + (diff * 5), 5, 60);
                     PluginLog.Info($"Long break duration: {Timer.LongBreakMinutes} min");
                     break;
 
                 default:
                     // Default to work duration
-                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + (diff * 5), 1, 60);
+                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + (diff * 5), 5, 60);
                     if (Timer.CurrentState == PomodoroState.Stopped)
                     {
                         Timer.Reset();
