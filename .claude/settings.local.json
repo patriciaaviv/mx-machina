@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(tree:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(swift build:*)",
+      "WebSearch",
+      "WebFetch(domain:logitech.github.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(/bin/bash -c \"cd /Users/Patricia/Desktop/mx-machina/MX-MachinaPlugin && dotnet build\")"
     ],
     "deny": [],
     "ask": []

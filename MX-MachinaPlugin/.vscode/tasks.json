@@ -18,21 +18,21 @@
     {
       "label": "Package Plugin",
       "type": "shell",
-      "command": "logiplugintool pack ./bin/Release ./MX-Machina.lplug4",
+      "command": "logiplugintool pack ./bin/Release ./MXMachina.lplug4",
       "group": "none",
       "problemMatcher": []
     },
     {
       "label": "Install Plugin",
       "type": "shell",
-      "command": "logiplugintool install ./MX-Machina.lplug4",
+      "command": "logiplugintool install ./MXMachina.lplug4",
       "group": "none",
       "problemMatcher": []
     },
     {
       "label": "Uninstall Plugin",
       "type": "shell",
-      "command": "logiplugintool uninstall MX-Machina",
+      "command": "logiplugintool uninstall MXMachina",
       "group": "none",
       "problemMatcher": []
     }
