@@ -142,40 +142,64 @@ namespace Loupedeck.MXMachinaPlugin
 
         private static void RunAppleScript(String script)
         {
-            var process = new Process
+            try
             {
-                StartInfo = new ProcessStartInfo
+                var process = new Process
                 {
-                    FileName = "/usr/bin/osascript",
-                    Arguments = $"-e '{script}'",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "/usr/bin/osascript",
+                        UseShellExecute = false,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
 
-            process.Start();
-            process.WaitForExit(5000);
+                process.Start();
+                process.StandardInput.WriteLine(script);
+                process.StandardInput.Close();
+                process.WaitForExit(5000);
+
+                var error = process.StandardError.ReadToEnd();
+                if (!String.IsNullOrEmpty(error))
+                {
+                    PluginLog.Warning($"AppleScript error: {error}");
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "Failed to run AppleScript");
+            }
         }
 
         private static void RunAppleScriptAsync(String script)
         {
-            var process = new Process
+            try
             {
-                StartInfo = new ProcessStartInfo
+                var process = new Process
                 {
-                    FileName = "/usr/bin/osascript",
-                    Arguments = $"-e '{script}'",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "/usr/bin/osascript",
+                        UseShellExecute = false,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
 
-            process.Start();
-            // Don't wait - let it run asynchronously
+                process.Start();
+                process.StandardInput.WriteLine(script);
+                process.StandardInput.Close();
+                // Don't wait - let it run asynchronously
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "Failed to run AppleScript async");
+            }
         }
 
         private static String EscapeString(String input)
@@ -183,7 +207,7 @@ namespace Loupedeck.MXMachinaPlugin
             return input
                 .Replace("\\", "\\\\")
                 .Replace("\"", "\\\"")
-                .Replace("\n", "\\n");
+                .Replace("\n", " ");
         }
     }
 }

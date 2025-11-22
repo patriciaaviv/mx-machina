@@ -41,7 +41,7 @@ namespace Loupedeck.MXMachinaPlugin
             switch (actionParameter)
             {
                 case "work":
-                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + diff, 1, 60);
+                    Timer.WorkMinutes = Math.Clamp(Timer.WorkMinutes + (diff * 5), 1, 60);
                     if (Timer.CurrentState == PomodoroState.Stopped || Timer.CurrentState == PomodoroState.Work)
                     {
                         Timer.Reset(); // Reset to apply new duration
