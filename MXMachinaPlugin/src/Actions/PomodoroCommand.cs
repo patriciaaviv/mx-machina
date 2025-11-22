@@ -23,17 +23,48 @@ namespace Loupedeck.MXMachinaPlugin
         }
 
         public PomodoroCommand()
-            : base(displayName: "Pomodoro Timer", description: "Start/Pause pomodoro timer", groupName: "Pomodoro")
+            : base(displayName: "Timer Status", description: "Start/Pause Pomodoro Timer", groupName: "Pomodoro")
         {
         }
 
         protected override void RunCommand(String actionParameter)
         {
             this.EnsureEventsSubscribed();
-            this.Timer.Toggle();
+            switch (this.Timer.CurrentState)
+            {
+                case PomodoroState.Inactive:
+                    this.Timer.Start();
+                    break;
+                case PomodoroState.Work:
+                    this.Timer.Toggle();
+                    break;
+                case PomodoroState.ShortBreak:
+                    this.Timer.Skip();
+                    break;
+                case PomodoroState.LongBreak:
+                    this.Timer.Skip();
+                    break;
+                default:
+                    break;
+            }
             this.ActionImageChanged();
         }
 
+        protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize)
+        {
+            return this.Timer.CurrentState switch
+            {
+                PomodoroState.Inactive => "Start Timer",
+                PomodoroState.Work => this.Timer.IsRunning ? "Pause Timer" : "Resume Timer",
+                PomodoroState.ShortBreak => "Skip Short Break",
+                PomodoroState.LongBreak => "Skip Long Break",
+                // Can never happen :-)
+                _ => throw new ApplicationException()
+            };
+        }
+
+
+        // NOTE: Vibe Coded:
         protected override BitmapImage GetCommandImage(String actionParameter, PluginImageSize imageSize)
         {
             this.EnsureEventsSubscribed();
@@ -89,17 +120,5 @@ namespace Loupedeck.MXMachinaPlugin
             return builder.ToImage();
         }
 
-        protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize)
-        {
-            return this.Timer.CurrentState switch
-            {
-                PomodoroState.Inactive => "Start Timer",
-                PomodoroState.Work => "Stop Timer",
-                PomodoroState.ShortBreak => "Skip Short Break",
-                PomodoroState.LongBreak => "Skip Long Break",
-                // Can never happen :-)
-                _ => throw new ApplicationException()
-            };
-        }
     }
 }
