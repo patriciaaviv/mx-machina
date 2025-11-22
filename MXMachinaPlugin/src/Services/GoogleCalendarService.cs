@@ -2,6 +2,7 @@ namespace Loupedeck.MXMachinaPlugin
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net.Http;
     using System.Text;
     using System.Text.Json;
@@ -22,20 +23,126 @@ namespace Loupedeck.MXMachinaPlugin
         private String _refreshToken;
         private DateTime _tokenExpiry;
 
-        // OAuth 2.0 configuration - users will need to set these
-        private const String ClientId = "YOUR_CLIENT_ID";
-        private const String ClientSecret = "YOUR_CLIENT_SECRET";
+        // OAuth 2.0 configuration - loaded from secrets.json
+        private String _clientId;
+        private String _clientSecret;
         private const String RedirectUri = "http://localhost:8080/callback";
         private const String Scope = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events";
 
         public Boolean IsAuthenticated => !String.IsNullOrEmpty(this._accessToken) && DateTime.Now < this._tokenExpiry;
 
-        public GoogleCalendarService() => this._httpClient = new HttpClient();
+        public GoogleCalendarService()
+        {
+            this._httpClient = new HttpClient();
+            this.LoadSecrets();
+        }
+
+        private void LoadSecrets()
+        {
+            PluginLog.Info("LoadSecrets: Starting to load secrets");
+
+            try
+            {
+                // Try the hardcoded path first
+                var projectRoot = "/Users/Patricia/Desktop/mx-machina/MXMachinaPlugin/secrets.json";
+                PluginLog.Info($"LoadSecrets: Checking {projectRoot}");
+
+                if (File.Exists(projectRoot))
+                {
+                    PluginLog.Info("LoadSecrets: File found!");
+                    var json = File.ReadAllText(projectRoot);
+                    PluginLog.Info($"LoadSecrets: JSON content length = {json.Length}");
+
+                    var secrets = JsonSerializer.Deserialize<JsonElement>(json);
+
+                    if (secrets.TryGetProperty("GoogleCalendar", out var googleCalendar))
+                    {
+                        this._clientId = googleCalendar.GetProperty("ClientId").GetString();
+                        this._clientSecret = googleCalendar.GetProperty("ClientSecret").GetString();
+                        PluginLog.Info($"LoadSecrets: Loaded ClientId = {this._clientId?.Substring(0, 10)}...");
+                        return;
+                    }
+                    else
+                    {
+                        PluginLog.Error("LoadSecrets: GoogleCalendar property not found in JSON");
+                    }
+                }
+                else
+                {
+                    PluginLog.Warning($"LoadSecrets: File not found at {projectRoot}");
+                }
+
+                // Fallback to other locations
+                var searchPaths = new System.Collections.Generic.List<String>();
+
+                // 1. Plugin assembly directory
+                var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                var pluginDirectory = Path.GetDirectoryName(assemblyLocation);
+                searchPaths.Add(Path.Combine(pluginDirectory, "secrets.json"));
+
+                // 3. User home directory
+                var homeDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".mxmachina", "secrets.json"
+                );
+                searchPaths.Add(homeDir);
+
+                // 4. Parent directories (for development)
+                var currentDir = pluginDirectory;
+                for (var i = 0; i < 5 && currentDir != null; i++)
+                {
+                    searchPaths.Add(Path.Combine(currentDir, "secrets.json"));
+                    currentDir = Path.GetDirectoryName(currentDir);
+                }
+
+                // Find first existing file
+                String secretsPath = null;
+                foreach (var path in searchPaths)
+                {
+                    if (File.Exists(path))
+                    {
+                        secretsPath = path;
+                        break;
+                    }
+                }
+
+                if (secretsPath != null)
+                {
+                    var json = File.ReadAllText(secretsPath);
+                    var secrets = JsonSerializer.Deserialize<JsonElement>(json);
+
+                    if (secrets.TryGetProperty("GoogleCalendar", out var googleCalendar))
+                    {
+                        this._clientId = googleCalendar.GetProperty("ClientId").GetString();
+                        this._clientSecret = googleCalendar.GetProperty("ClientSecret").GetString();
+                        PluginLog.Info($"Google Calendar credentials loaded from: {secretsPath}");
+                    }
+                }
+                else
+                {
+                    PluginLog.Warning("secrets.json not found. Searched locations:");
+                    foreach (var path in searchPaths)
+                    {
+                        PluginLog.Warning($"  - {path}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "Failed to load Google Calendar secrets");
+            }
+        }
 
         public String GetAuthorizationUrl()
         {
+            if (String.IsNullOrEmpty(this._clientId))
+            {
+                PluginLog.Error("Client ID is not configured. Check secrets.json location.");
+                return null;
+            }
+
             return $"https://accounts.google.com/o/oauth2/v2/auth?" +
-                   $"client_id={ClientId}&" +
+                   $"client_id={this._clientId}&" +
                    $"redirect_uri={Uri.EscapeDataString(RedirectUri)}&" +
                    $"response_type=code&" +
                    $"scope={Uri.EscapeDataString(Scope)}&" +
@@ -50,8 +157,8 @@ namespace Loupedeck.MXMachinaPlugin
                 var content = new FormUrlEncodedContent(new Dictionary<String, String>
                 {
                     ["code"] = authCode,
-                    ["client_id"] = ClientId,
-                    ["client_secret"] = ClientSecret,
+                    ["client_id"] = this._clientId,
+                    ["client_secret"] = this._clientSecret,
                     ["redirect_uri"] = RedirectUri,
                     ["grant_type"] = "authorization_code"
                 });
@@ -164,7 +271,7 @@ namespace Loupedeck.MXMachinaPlugin
                 var eventData = new
                 {
                     summary = title,
-                    description = "Pomodoro focus block created by MX-Machina",
+                    description = "Pomodoro focus block created by MX-Machina Plugin",
                     start = new
                     {
                         dateTime = start.ToString("yyyy-MM-ddTHH:mm:ss"),

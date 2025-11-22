@@ -106,23 +106,20 @@ namespace Loupedeck.MXMachinaPlugin
                 // Show completion notification
                 NotificationService.NotifySessionComplete(state, Timer.CompletedPomodoros);
 
-                if (state == PomodoroState.Work)
+                // Create calendar event for completed work sessions only
+                if (state == PomodoroState.Work && Calendar.IsAuthenticated)
                 {
-                    // Optionally create a calendar event for completed focus block
-                    if (Calendar.IsAuthenticated)
+                    try
                     {
-                        try
-                        {
-                            var focusEnd = DateTime.Now;
-                            var focusStart = focusEnd.AddMinutes(-Timer.WorkMinutes);
-                            await Calendar.CreateFocusBlockAsync(focusStart, Timer.WorkMinutes,
-                                $"Focus Session #{Timer.CompletedPomodoros}");
-                            PluginLog.Info("Created calendar event for completed focus session");
-                        }
-                        catch (Exception ex)
-                        {
-                            PluginLog.Error(ex, "Failed to create calendar event");
-                        }
+                        var focusEnd = DateTime.Now;
+                        var focusStart = focusEnd.AddMinutes(-Timer.WorkMinutes);
+                        await Calendar.CreateFocusBlockAsync(focusStart, Timer.WorkMinutes,
+                            $"Focus Session #{Timer.CompletedPomodoros}");
+                        PluginLog.Info("Created calendar event for completed focus session");
+                    }
+                    catch (Exception ex)
+                    {
+                        PluginLog.Error(ex, "Failed to create calendar event");
                     }
                 }
             };
