@@ -31,7 +31,7 @@ namespace Loupedeck.MXMachinaPlugin
         {
             this.EnsureEventsSubscribed();
             this.Timer.Toggle();
-           // this.ActionImageChanged();
+            // this.ActionImageChanged();
         }
 
         protected override BitmapImage GetCommandImage(String actionParameter, PluginImageSize imageSize)
@@ -63,26 +63,9 @@ namespace Loupedeck.MXMachinaPlugin
             }
 
             builder.Clear(bgColor);
-
             // Determine what to display
-            String displayText;
-            String labelText;
-
-            switch (actionParameter)
-            {
-                case "reset":
-                    displayText = "RST";
-                    labelText = "Reset";
-                    break;
-                case "skip":
-                    displayText = "SKP";
-                    labelText = "Skip";
-                    break;
-                default: // toggle
-                    displayText = this.Timer.GetDisplayTime();
-                    labelText = this.Timer.GetStateLabel();
-                    break;
-            }
+            String displayText = this.Timer.GetDisplayTime();
+            String labelText = this.Timer.GetStateLabel();
 
             // Draw label at top
             builder.DrawText(labelText, 0, 8, builder.Width, 20, accentColor, 12);
@@ -98,7 +81,7 @@ namespace Loupedeck.MXMachinaPlugin
             }
 
             // Draw running indicator
-            if (this.Timer.IsRunning && (actionParameter == "toggle" || String.IsNullOrEmpty(actionParameter)))
+            if (this.Timer.IsRunning)
             {
                 builder.FillRectangle(builder.Width - 12, 4, 8, 8, accentColor);
             }
@@ -108,11 +91,14 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize)
         {
-            return actionParameter switch
+            return this.Timer.CurrentState switch
             {
-                "reset" => "Reset",
-                "skip" => "Skip",
-                _ => $"{this.Timer.GetStateLabel()}{Environment.NewLine}{this.Timer.GetDisplayTime()}"
+                PomodoroState.Inactive => "Start Timer",
+                PomodoroState.Work => "Stop Timer",
+                PomodoroState.ShortBreak => "Skip Short Break",
+                PomodoroState.LongBreak => "Skip Long Break",
+                // Can never happen :-)
+                _ => throw new ApplicationException()
             };
         }
     }

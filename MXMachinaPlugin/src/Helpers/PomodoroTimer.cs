@@ -5,7 +5,7 @@ namespace Loupedeck.MXMachinaPlugin
 
     public enum PomodoroState
     {
-        Stopped,
+        Inactive,
         Work,
         ShortBreak,
         LongBreak
@@ -27,7 +27,7 @@ namespace Loupedeck.MXMachinaPlugin
         public event Action OnStateChanged;
         public event Action<PomodoroState> OnSessionComplete;
 
-        public PomodoroState CurrentState { get; private set; } = PomodoroState.Stopped;
+        public PomodoroState CurrentState { get; private set; } = PomodoroState.Inactive;
         public Int32 WorkMinutes { get; set; } = DefaultWorkMinutes;
         public Int32 ShortBreakMinutes { get; set; } = DefaultShortBreakMinutes;
         public Int32 LongBreakMinutes { get; set; } = DefaultLongBreakMinutes;
@@ -71,7 +71,7 @@ namespace Loupedeck.MXMachinaPlugin
 
         public void Start()
         {
-            if (this.CurrentState == PomodoroState.Stopped)
+            if (this.CurrentState == PomodoroState.Inactive)
             {
                 // Start a new work session
                 this.CurrentState = PomodoroState.Work;
@@ -115,7 +115,7 @@ namespace Loupedeck.MXMachinaPlugin
         {
             this._timer.Stop();
             this.IsRunning = false;
-            this.CurrentState = PomodoroState.Stopped;
+            this.CurrentState = PomodoroState.Inactive;
             this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
             this.CompletedPomodoros = 0;
             OnStateChanged?.Invoke();
@@ -124,7 +124,7 @@ namespace Loupedeck.MXMachinaPlugin
 
         public void Skip()
         {
-            if (this.CurrentState != PomodoroState.Stopped)
+            if (this.CurrentState != PomodoroState.Inactive)
             {
                 this.CompleteCurrentSession();
             }
@@ -180,11 +180,12 @@ namespace Loupedeck.MXMachinaPlugin
         {
             return this.CurrentState switch
             {
-                PomodoroState.Stopped => "Ready",
+                PomodoroState.Inactive => "Ready",
                 PomodoroState.Work => "Focus",
                 PomodoroState.ShortBreak => "Break",
                 PomodoroState.LongBreak => "Long Break",
-                _ => ""
+                // Impossibruh :-)
+                _ => throw new ApplicationException()
             };
         }
 

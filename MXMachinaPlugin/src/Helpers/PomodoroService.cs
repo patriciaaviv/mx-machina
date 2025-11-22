@@ -57,7 +57,7 @@ namespace Loupedeck.MXMachinaPlugin
             // Connect activity monitor to timer
             ActivityMonitor.OnBreakSuggested += (suggestion) =>
             {
-                if (!Timer.IsRunning && Timer.CurrentState == PomodoroState.Stopped)
+                if (!Timer.IsRunning && Timer.CurrentState == PomodoroState.Inactive)
                 {
                     PluginLog.Info($"Smart break suggestion: {suggestion.Reason}");
                     NotificationService.ShowNotification("💡 Smart Suggestion", suggestion.Reason, "Purr");
@@ -71,7 +71,7 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     ActivityMonitor.StartMonitoring();
                 }
-                else if (Timer.CurrentState == PomodoroState.Stopped)
+                else if (Timer.CurrentState == PomodoroState.Inactive)
                 {
                     ActivityMonitor.StopMonitoring();
                 }

@@ -72,7 +72,7 @@ namespace Loupedeck.MXMachinaPlugin
                 // Get optimal duration based on activity patterns
                 var optimalDuration = this.ActivityMonitor.GetOptimalWorkDuration();
 
-                if (this.Timer.CurrentState == PomodoroState.Stopped)
+                if (this.Timer.CurrentState == PomodoroState.Inactive)
                 {
                     // Apply smart duration suggestion
                     this.Timer.WorkMinutes = optimalDuration;
@@ -142,7 +142,7 @@ namespace Loupedeck.MXMachinaPlugin
             var suggested = this.ActivityMonitor.GetOptimalWorkDuration();
             this.Timer.WorkMinutes = suggested;
 
-            if (this.Timer.CurrentState == PomodoroState.Stopped)
+            if (this.Timer.CurrentState == PomodoroState.Inactive)
             {
                 this.Timer.Reset(); // Apply new duration
             }
