@@ -19,7 +19,7 @@ namespace Loupedeck.MXMachinaPlugin
         }
 
         public PomodoroAdjustment()
-            : base(displayName: "Work Duration", description: "Adjust work session duration", groupName: "Pomodoro", hasReset: true)
+            : base(displayName: "Reset Timer", description: "Adjust duration, press to reset", groupName: "Pomodoro", hasReset: true)
         {
             // Add parameters for different duration adjustments
             this.AddParameter("work", "Work Duration", "Pomodoro");
@@ -35,6 +35,13 @@ namespace Loupedeck.MXMachinaPlugin
             if (this.Timer.IsRunning)
             {
                 PluginLog.Info("Cannot adjust duration while timer is running");
+
+                // Show notification with error sound to indicate action is blocked
+                NotificationService.ShowNotification(
+                    "⚠️ Timer Running",
+                    "Pause the timer first to adjust duration.",
+                    "Basso"
+                );
                 return;
             }
 
@@ -68,6 +75,9 @@ namespace Loupedeck.MXMachinaPlugin
                     }
                     break;
             }
+
+            // Play subtle sound for successful adjustment
+            NotificationService.PlaySound("Tink");
 
             this.AdjustmentValueChanged();
         }
@@ -104,6 +114,9 @@ namespace Loupedeck.MXMachinaPlugin
                     PluginLog.Info("All durations reset to defaults");
                     break;
             }
+
+            // Play sound for successful reset
+            NotificationService.PlaySound("Hero");
 
             this.AdjustmentValueChanged();
         }

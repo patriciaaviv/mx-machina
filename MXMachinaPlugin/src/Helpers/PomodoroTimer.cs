@@ -163,6 +163,11 @@ namespace Loupedeck.MXMachinaPlugin
 
             OnStateChanged?.Invoke();
             OnTick?.Invoke();
+
+            // Auto-start the next session
+            this._endTime = DateTime.Now + this._remainingTime;
+            this.IsRunning = true;
+            this._timer.Start();
         }
 
         public String GetDisplayTime()
