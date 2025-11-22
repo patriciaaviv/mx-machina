@@ -49,8 +49,15 @@
                 prefix = "$HOME/.dotnet/tools";
               }
             ];
+            commands = [
+              {
+                name = "logs";
+                command = "tail -f $HOME/Library/Application\\ Support/Logi/LogiPluginService/Logs/plugin_logs/MXMachina.log";
+                help = "tail plugin log";
+                category = "debug";
+              }
+            ];
             devshell.startup.pre-commit.text = config.pre-commit.installationScript;
-
           };
 
           pre-commit.settings.hooks.treefmt.enable = true;
