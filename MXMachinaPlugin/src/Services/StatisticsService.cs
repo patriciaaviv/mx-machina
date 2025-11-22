@@ -22,7 +22,18 @@ namespace Loupedeck.MXMachinaPlugin
 
     public class StatisticsService
     {
-        private const String DataFilePath = "/Users/Patricia/Desktop/mx-machina/MXMachinaPlugin/statistics.json";
+        private static String GetDataDirectory()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var dataDir = Path.Combine(appData, "MXMachinaPlugin");
+            if (!Directory.Exists(dataDir))
+            {
+                Directory.CreateDirectory(dataDir);
+            }
+            return dataDir;
+        }
+
+        private static String DataFilePath => Path.Combine(GetDataDirectory(), "statistics.json");
         private StatisticsData _data;
 
         public StatisticsService()

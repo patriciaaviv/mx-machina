@@ -28,7 +28,20 @@ namespace Loupedeck.MXMachinaPlugin
         private String _clientSecret;
         private const String RedirectUri = "http://localhost:8080/callback";
         private const String Scope = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events";
-        private const String TokenFilePath = "/Users/Patricia/Desktop/mx-machina/MXMachinaPlugin/tokens.json";
+
+        private static String GetDataDirectory()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var dataDir = Path.Combine(appData, "MXMachinaPlugin");
+            if (!Directory.Exists(dataDir))
+            {
+                Directory.CreateDirectory(dataDir);
+            }
+            return dataDir;
+        }
+
+        private static String TokenFilePath => Path.Combine(GetDataDirectory(), "tokens.json");
+        private static String SecretsFilePath => Path.Combine(GetDataDirectory(), "secrets.json");
 
         public Boolean IsAuthenticated => !String.IsNullOrEmpty(this._accessToken) && DateTime.Now < this._tokenExpiry;
 
@@ -131,23 +144,20 @@ namespace Loupedeck.MXMachinaPlugin
 
             try
             {
-                // Try the hardcoded path first
-                var projectRoot = "/Users/Patricia/Desktop/mx-machina/MXMachinaPlugin/secrets.json";
-                PluginLog.Info($"LoadSecrets: Checking {projectRoot}");
+                // Check the data directory
+                var secretsPath = SecretsFilePath;
+                PluginLog.Info($"LoadSecrets: Checking {secretsPath}");
 
-                if (File.Exists(projectRoot))
+                if (File.Exists(secretsPath))
                 {
-                    PluginLog.Info("LoadSecrets: File found!");
-                    var json = File.ReadAllText(projectRoot);
-                    PluginLog.Info($"LoadSecrets: JSON content length = {json.Length}");
-
+                    var json = File.ReadAllText(secretsPath);
                     var secrets = JsonSerializer.Deserialize<JsonElement>(json);
 
                     if (secrets.TryGetProperty("GoogleCalendar", out var googleCalendar))
                     {
                         this._clientId = googleCalendar.GetProperty("ClientId").GetString();
                         this._clientSecret = googleCalendar.GetProperty("ClientSecret").GetString();
-                        PluginLog.Info($"LoadSecrets: Loaded ClientId = {this._clientId?.Substring(0, 10)}...");
+                        PluginLog.Info($"LoadSecrets: Loaded ClientId successfully");
                         return;
                     }
                     else
@@ -157,25 +167,17 @@ namespace Loupedeck.MXMachinaPlugin
                 }
                 else
                 {
-                    PluginLog.Warning($"LoadSecrets: File not found at {projectRoot}");
+                    PluginLog.Warning($"LoadSecrets: secrets.json not found at {secretsPath}");
+                    PluginLog.Warning($"Please copy your secrets.json to: {GetDataDirectory()}");
                 }
 
-                // Fallback to other locations
-                var searchPaths = new System.Collections.Generic.List<String>();
-
-                // 1. Plugin assembly directory
+                // Fallback: check assembly directory
                 var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
                 var pluginDirectory = Path.GetDirectoryName(assemblyLocation);
+                var searchPaths = new System.Collections.Generic.List<String>();
                 searchPaths.Add(Path.Combine(pluginDirectory, "secrets.json"));
 
-                // 3. User home directory
-                var homeDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    ".mxmachina", "secrets.json"
-                );
-                searchPaths.Add(homeDir);
-
-                // 4. Parent directories (for development)
+                // Also check parent directories (for development)
                 var currentDir = pluginDirectory;
                 for (var i = 0; i < 5 && currentDir != null; i++)
                 {
@@ -184,26 +186,26 @@ namespace Loupedeck.MXMachinaPlugin
                 }
 
                 // Find first existing file
-                String secretsPath = null;
+                String foundPath = null;
                 foreach (var path in searchPaths)
                 {
                     if (File.Exists(path))
                     {
-                        secretsPath = path;
+                        foundPath = path;
                         break;
                     }
                 }
 
-                if (secretsPath != null)
+                if (foundPath != null)
                 {
-                    var json = File.ReadAllText(secretsPath);
+                    var json = File.ReadAllText(foundPath);
                     var secrets = JsonSerializer.Deserialize<JsonElement>(json);
 
                     if (secrets.TryGetProperty("GoogleCalendar", out var googleCalendar))
                     {
                         this._clientId = googleCalendar.GetProperty("ClientId").GetString();
                         this._clientSecret = googleCalendar.GetProperty("ClientSecret").GetString();
-                        PluginLog.Info($"Google Calendar credentials loaded from: {secretsPath}");
+                        PluginLog.Info($"Google Calendar credentials loaded from: {foundPath}");
                     }
                 }
                 else
