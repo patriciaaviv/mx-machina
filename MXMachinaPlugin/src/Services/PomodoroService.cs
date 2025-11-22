@@ -11,6 +11,8 @@ namespace Loupedeck.MXMachinaPlugin
         private static StatisticsService _statisticsService;
         private static FocusModeService _focusModeService;
         private static NotificationService _notificationService;
+        private static HapticService _hapticService;
+        private static Boolean _wasRunning = false;
 
         public static PomodoroTimer Timer
         {
@@ -27,7 +29,54 @@ namespace Loupedeck.MXMachinaPlugin
                 }
             }
         }
-        private static Boolean _wasRunning = false;
+
+        public static void InitializeHaptics(HapticService haptics)
+        {
+            _hapticService = haptics;
+
+            // Hook up haptics to timer events
+            Timer.OnTick += () =>
+            {
+                if (Timer.IsRunning && !_wasRunning)
+                {
+                    // Timer just started
+                    _hapticService?.TriggerTimerStart();
+                }
+                else if (!Timer.IsRunning && _wasRunning)
+                {
+                    // Timer just paused
+                    _hapticService?.TriggerTimerPause();
+                }
+                _wasRunning = Timer.IsRunning;
+            };
+
+            Timer.OnSessionComplete += (state) =>
+            {
+                if (state == PomodoroState.Work)
+                {
+                    _hapticService?.TriggerWorkComplete();
+                }
+                else
+                {
+                    _hapticService?.TriggerBreakComplete();
+                }
+            };
+
+            // Hook up haptics to focus mode
+            FocusMode.OnFocusModeChanged += (enabled) =>
+            {
+                if (enabled)
+                {
+                    _hapticService?.TriggerFocusModeOn();
+                }
+                else
+                {
+                    _hapticService?.TriggerFocusModeOff();
+                }
+            };
+
+            PluginLog.Info("Haptic feedback initialized");
+        }
 
         private static void InitializeSmartFeatures()
         {

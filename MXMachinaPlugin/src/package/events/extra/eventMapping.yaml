@@ -1,0 +1,25 @@
+# Haptic event mappings for MX-Machina Pomodoro Plugin
+haptics:
+    TimerStart:
+        DEFAULT: knock
+        MxCreativeConsole: knock
+
+    TimerPause:
+        DEFAULT: sharp_collision
+        MxCreativeConsole: mad
+
+    WorkComplete:
+        DEFAULT: completed
+        MxCreativeConsole: firework
+
+    BreakComplete:
+        DEFAULT: happy_alert
+        MxCreativeConsole: wave
+
+    FocusModeOn:
+        DEFAULT: sharp_state_change
+        MxCreativeConsole: knock
+
+    FocusModeOff:
+        DEFAULT: damp_state_change
+        MxCreativeConsole: subtle_collision
