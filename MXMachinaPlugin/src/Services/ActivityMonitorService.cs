@@ -282,16 +282,11 @@ namespace Loupedeck.MXMachinaPlugin
             var avgActivity = this._activityHistory.Average(a => a.ActivityScore);
             var sessionMinutes = (Int32)this.SessionDuration.TotalMinutes;
 
-            if (avgActivity > 70)
-            {
-                return $"Excellent focus! {sessionMinutes} min session with high productivity.";
-            }
-            else
-            {
-                return avgActivity > 40
+            return avgActivity > 70
+                ? $"Excellent focus! {sessionMinutes} min session with high productivity."
+                : avgActivity > 40
                     ? $"Good session. {sessionMinutes} min with moderate activity."
                     : $"Low activity detected. Consider eliminating distractions.";
-            }
         }
 
         public void Dispose()
