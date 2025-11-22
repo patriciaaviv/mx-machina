@@ -13,7 +13,7 @@ namespace Loupedeck.MXMachinaPlugin
             String[] timeParams = new String[] { "Work", "Short Break", "Long Break" };
             foreach (String timeParam in timeParams)
             {
-                this.AddParameter(timeParam, $"Adjust {timeParam} Time", "Time Settings");
+                this.AddParameter(timeParam, $"Adjust {timeParam} Time", "Pomodoro###Time Settings");
             }
         }
 
@@ -65,7 +65,6 @@ namespace Loupedeck.MXMachinaPlugin
             }
             PluginLog.Info($"Reset {actionParameter} duration to defaults");
             this.AdjustmentValueChanged();
-            this.ActionImageChanged();
         }
 
         protected override String GetAdjustmentValue(String actionParameter)
