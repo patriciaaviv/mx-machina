@@ -50,6 +50,8 @@ namespace Loupedeck.MXMachinaPlugin
             }
         }
 
+        private static Boolean _wasRunning = false;
+
         private static void InitializeSmartFeatures()
         {
             // Connect activity monitor to timer
@@ -58,10 +60,11 @@ namespace Loupedeck.MXMachinaPlugin
                 if (!Timer.IsRunning && Timer.CurrentState == PomodoroState.Stopped)
                 {
                     PluginLog.Info($"Smart break suggestion: {suggestion.Reason}");
+                    NotificationService.ShowNotification("💡 Smart Suggestion", suggestion.Reason, "Purr");
                 }
             };
 
-            // Start activity monitoring when timer starts
+            // Show notifications on state changes
             Timer.OnStateChanged += () =>
             {
                 if (Timer.CurrentState == PomodoroState.Work && Timer.IsRunning)
@@ -74,9 +77,35 @@ namespace Loupedeck.MXMachinaPlugin
                 }
             };
 
-            // Use smart work duration suggestions
+            // Show notification when timer starts or pauses
+            Timer.OnTick += () =>
+            {
+                if (Timer.IsRunning && !_wasRunning)
+                {
+                    // Timer just started
+                    var minutes = Timer.CurrentState switch
+                    {
+                        PomodoroState.Work => Timer.WorkMinutes,
+                        PomodoroState.ShortBreak => Timer.ShortBreakMinutes,
+                        PomodoroState.LongBreak => Timer.LongBreakMinutes,
+                        _ => 25
+                    };
+                    NotificationService.NotifyTimerStarted(minutes, Timer.CurrentState);
+                }
+                else if (!Timer.IsRunning && _wasRunning)
+                {
+                    // Timer just paused
+                    NotificationService.NotifyTimerPaused(Timer.GetDisplayTime());
+                }
+                _wasRunning = Timer.IsRunning;
+            };
+
+            // Use smart work duration suggestions and show completion notifications
             Timer.OnSessionComplete += async (state) =>
             {
+                // Show completion notification
+                NotificationService.NotifySessionComplete(state, Timer.CompletedPomodoros);
+
                 if (state == PomodoroState.Work)
                 {
                     // Optionally create a calendar event for completed focus block
