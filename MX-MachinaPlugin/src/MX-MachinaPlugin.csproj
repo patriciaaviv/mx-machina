@@ -21,7 +21,7 @@
     <BaseOutputPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\bin\'))</BaseOutputPath>
     <OutputPath>$(BaseOutputPath)$(Configuration)\bin\</OutputPath>
 
-    <PluginShortName>MX-Machina</PluginShortName>
+    <PluginShortName>MXMachina</PluginShortName>
   </PropertyGroup>
 
   <ItemGroup>
