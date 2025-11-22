@@ -14,56 +14,54 @@ namespace Loupedeck.MXMachinaPlugin
     public class PomodoroTimer : IDisposable
     {
         // Default durations in minutes
-        public const int DefaultWorkMinutes = 25;
-        public const int DefaultShortBreakMinutes = 5;
-        public const int DefaultLongBreakMinutes = 15;
-        public const int PomodorosBeforeLongBreak = 4;
+        public const Int32 DefaultWorkMinutes = 25;
+        public const Int32 DefaultShortBreakMinutes = 5;
+        public const Int32 DefaultLongBreakMinutes = 15;
+        public const Int32 PomodorosBeforeLongBreak = 4;
 
         private readonly Timer _timer;
         private DateTime _endTime;
         private TimeSpan _remainingTime;
-        private bool _isRunning;
-        private int _completedPomodoros;
 
         public event Action OnTick;
         public event Action OnStateChanged;
         public event Action<PomodoroState> OnSessionComplete;
 
         public PomodoroState CurrentState { get; private set; } = PomodoroState.Stopped;
-        public int WorkMinutes { get; set; } = DefaultWorkMinutes;
-        public int ShortBreakMinutes { get; set; } = DefaultShortBreakMinutes;
-        public int LongBreakMinutes { get; set; } = DefaultLongBreakMinutes;
-        public int CompletedPomodoros => _completedPomodoros;
+        public Int32 WorkMinutes { get; set; } = DefaultWorkMinutes;
+        public Int32 ShortBreakMinutes { get; set; } = DefaultShortBreakMinutes;
+        public Int32 LongBreakMinutes { get; set; } = DefaultLongBreakMinutes;
+        public Int32 CompletedPomodoros { get; private set; }
 
-        public bool IsRunning => _isRunning;
+        public Boolean IsRunning { get; private set; }
 
         public TimeSpan RemainingTime
         {
             get
             {
-                if (_isRunning)
+                if (this.IsRunning)
                 {
-                    var remaining = _endTime - DateTime.Now;
+                    var remaining = this._endTime - DateTime.Now;
                     return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
                 }
-                return _remainingTime;
+                return this._remainingTime;
             }
         }
 
         public PomodoroTimer()
         {
-            _timer = new Timer(1000); // Update every second
-            _timer.Elapsed += OnTimerElapsed;
-            _remainingTime = TimeSpan.FromMinutes(WorkMinutes);
+            this._timer = new Timer(1000); // Update every second
+            this._timer.Elapsed += this.OnTimerElapsed;
+            this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
         }
 
-        private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+        private void OnTimerElapsed(Object sender, ElapsedEventArgs e)
         {
-            var remaining = RemainingTime;
+            var remaining = this.RemainingTime;
 
             if (remaining <= TimeSpan.Zero)
             {
-                CompleteCurrentSession();
+                this.CompleteCurrentSession();
             }
             else
             {
@@ -73,109 +71,109 @@ namespace Loupedeck.MXMachinaPlugin
 
         public void Start()
         {
-            if (CurrentState == PomodoroState.Stopped)
+            if (this.CurrentState == PomodoroState.Stopped)
             {
                 // Start a new work session
-                CurrentState = PomodoroState.Work;
-                _remainingTime = TimeSpan.FromMinutes(WorkMinutes);
+                this.CurrentState = PomodoroState.Work;
+                this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
                 OnStateChanged?.Invoke();
             }
 
-            if (!_isRunning)
+            if (!this.IsRunning)
             {
-                _endTime = DateTime.Now + _remainingTime;
-                _isRunning = true;
-                _timer.Start();
+                this._endTime = DateTime.Now + this._remainingTime;
+                this.IsRunning = true;
+                this._timer.Start();
                 OnTick?.Invoke();
             }
         }
 
         public void Pause()
         {
-            if (_isRunning)
+            if (this.IsRunning)
             {
-                _remainingTime = RemainingTime;
-                _isRunning = false;
-                _timer.Stop();
+                this._remainingTime = this.RemainingTime;
+                this.IsRunning = false;
+                this._timer.Stop();
                 OnTick?.Invoke();
             }
         }
 
         public void Toggle()
         {
-            if (_isRunning)
+            if (this.IsRunning)
             {
-                Pause();
+                this.Pause();
             }
             else
             {
-                Start();
+                this.Start();
             }
         }
 
         public void Reset()
         {
-            _timer.Stop();
-            _isRunning = false;
-            CurrentState = PomodoroState.Stopped;
-            _remainingTime = TimeSpan.FromMinutes(WorkMinutes);
-            _completedPomodoros = 0;
+            this._timer.Stop();
+            this.IsRunning = false;
+            this.CurrentState = PomodoroState.Stopped;
+            this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
+            this.CompletedPomodoros = 0;
             OnStateChanged?.Invoke();
             OnTick?.Invoke();
         }
 
         public void Skip()
         {
-            if (CurrentState != PomodoroState.Stopped)
+            if (this.CurrentState != PomodoroState.Stopped)
             {
-                CompleteCurrentSession();
+                this.CompleteCurrentSession();
             }
         }
 
         private void CompleteCurrentSession()
         {
-            _timer.Stop();
-            _isRunning = false;
+            this._timer.Stop();
+            this.IsRunning = false;
 
-            var completedState = CurrentState;
+            var completedState = this.CurrentState;
             OnSessionComplete?.Invoke(completedState);
 
             // Determine next state
-            if (CurrentState == PomodoroState.Work)
+            if (this.CurrentState == PomodoroState.Work)
             {
-                _completedPomodoros++;
+                this.CompletedPomodoros++;
 
-                if (_completedPomodoros % PomodorosBeforeLongBreak == 0)
+                if (this.CompletedPomodoros % PomodorosBeforeLongBreak == 0)
                 {
-                    CurrentState = PomodoroState.LongBreak;
-                    _remainingTime = TimeSpan.FromMinutes(LongBreakMinutes);
+                    this.CurrentState = PomodoroState.LongBreak;
+                    this._remainingTime = TimeSpan.FromMinutes(this.LongBreakMinutes);
                 }
                 else
                 {
-                    CurrentState = PomodoroState.ShortBreak;
-                    _remainingTime = TimeSpan.FromMinutes(ShortBreakMinutes);
+                    this.CurrentState = PomodoroState.ShortBreak;
+                    this._remainingTime = TimeSpan.FromMinutes(this.ShortBreakMinutes);
                 }
             }
             else
             {
                 // Break completed, start new work session
-                CurrentState = PomodoroState.Work;
-                _remainingTime = TimeSpan.FromMinutes(WorkMinutes);
+                this.CurrentState = PomodoroState.Work;
+                this._remainingTime = TimeSpan.FromMinutes(this.WorkMinutes);
             }
 
             OnStateChanged?.Invoke();
             OnTick?.Invoke();
         }
 
-        public string GetDisplayTime()
+        public String GetDisplayTime()
         {
-            var time = RemainingTime;
-            return $"{(int)time.TotalMinutes:D2}:{time.Seconds:D2}";
+            var time = this.RemainingTime;
+            return $"{(Int32)time.TotalMinutes:D2}:{time.Seconds:D2}";
         }
 
-        public string GetStateLabel()
+        public String GetStateLabel()
         {
-            return CurrentState switch
+            return this.CurrentState switch
             {
                 PomodoroState.Stopped => "Ready",
                 PomodoroState.Work => "Focus",
@@ -187,8 +185,8 @@ namespace Loupedeck.MXMachinaPlugin
 
         public void Dispose()
         {
-            _timer.Stop();
-            _timer.Dispose();
+            this._timer.Stop();
+            this._timer.Dispose();
         }
     }
 }
