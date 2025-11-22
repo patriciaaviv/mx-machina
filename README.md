@@ -1,4 +1,5 @@
 # MX-Machina Pomodoro Plugin
+<img width="1020" height="889" alt="ChatGPT Image Nov 22, 2025, 09_08_12 PM" src="https://github.com/user-attachments/assets/b506d9ff-e5f5-4b26-b03f-73152e3eddbd" />
 
 A productivity-focused plugin for the Logitech MX 4 mouse that brings a full-featured Pomodoro timer with Google Calendar integration, statistics tracking, and focus mode.
 
@@ -99,7 +100,7 @@ All data is stored in `~/Library/Application Support/MXMachinaPlugin/`:
 ### Building
 
 ```bash
-cd src
+cd MXMachinaPlugin
 dotnet build
 ```
 
@@ -130,4 +131,5 @@ MIT License
 ## Author
 
 Built with the Logitech Actions SDK
+
 
