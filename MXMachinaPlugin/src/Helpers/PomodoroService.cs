@@ -5,9 +5,6 @@ namespace Loupedeck.MXMachinaPlugin
     // Singleton service to share the PomodoroTimer and related services
     internal static class PomodoroService
     {
-        private static PomodoroTimer _timer;
-        private static GoogleCalendarService _calendarService;
-        private static ActivityMonitorService _activityMonitor;
         private static readonly Object _lock = new Object();
 
         public static PomodoroTimer Timer
@@ -16,12 +13,12 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 lock (_lock)
                 {
-                    if (_timer == null)
+                    if (field == null)
                     {
-                        _timer = new PomodoroTimer();
+                        field = new PomodoroTimer();
                         InitializeSmartFeatures();
                     }
-                    return _timer;
+                    return field;
                 }
             }
         }
@@ -32,8 +29,8 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 lock (_lock)
                 {
-                    _calendarService ??= new GoogleCalendarService();
-                    return _calendarService;
+                    field ??= new GoogleCalendarService();
+                    return field;
                 }
             }
         }
@@ -44,8 +41,8 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 lock (_lock)
                 {
-                    _activityMonitor ??= new ActivityMonitorService();
-                    return _activityMonitor;
+                    field ??= new ActivityMonitorService();
+                    return field;
                 }
             }
         }
