@@ -31,7 +31,7 @@ namespace Loupedeck.MXMachinaPlugin
         {
             this.EnsureEventsSubscribed();
             this.Timer.Toggle();
-            // this.ActionImageChanged();
+            this.ActionImageChanged();
         }
 
         protected override BitmapImage GetCommandImage(String actionParameter, PluginImageSize imageSize)

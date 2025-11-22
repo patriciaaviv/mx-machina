@@ -13,11 +13,12 @@ namespace Loupedeck.MXMachinaPlugin
 
     public class PomodoroTimer : IDisposable
     {
-        // Default durations in minutes
-        public const Int32 DefaultWorkMinutes = 25;
-        public const Int32 DefaultShortBreakMinutes = 5;
-        public const Int32 DefaultLongBreakMinutes = 15;
         public const Int32 PomodorosBeforeLongBreak = 4;
+
+        // Default durations and their limits in minutes
+        private const Int32 DefaultWorkMinutes = 25;
+        private const Int32 DefaultShortBreakMinutes = 5;
+        private const Int32 DefaultLongBreakMinutes = 15;
 
         private readonly Timer _timer;
         private DateTime _endTime;
@@ -28,9 +29,51 @@ namespace Loupedeck.MXMachinaPlugin
         public event Action<PomodoroState> OnSessionComplete;
 
         public PomodoroState CurrentState { get; private set; } = PomodoroState.Inactive;
-        public Int32 WorkMinutes { get; set; } = DefaultWorkMinutes;
-        public Int32 ShortBreakMinutes { get; set; } = DefaultShortBreakMinutes;
-        public Int32 LongBreakMinutes { get; set; } = DefaultLongBreakMinutes;
+
+        private Int32 _workMinutes = DefaultWorkMinutes;
+        private Int32 _shortBreakMinutes = DefaultShortBreakMinutes;
+        private Int32 _longBreakMinutes = DefaultLongBreakMinutes;
+
+        public Int32 WorkMinutes
+        {
+            get => this._workMinutes;
+            set => this._workMinutes = Math.Clamp(value, 5, 60);
+        }
+
+        public Int32 ShortBreakMinutes
+        {
+            get => this._shortBreakMinutes;
+            set => this._shortBreakMinutes = Math.Clamp(value, 5, 60);
+        }
+
+        public Int32 LongBreakMinutes
+        {
+            get => this._longBreakMinutes;
+            set => this._longBreakMinutes = Math.Clamp(value, 5, 60);
+        }
+
+        public void ResetWorkMinutes()
+        {
+            this._workMinutes = DefaultWorkMinutes;
+        }
+
+        public void ResetLongBreakMinutes()
+        {
+            this._longBreakMinutes = DefaultLongBreakMinutes;
+        }
+
+        public void ResetShortBreakMinutes()
+        {
+            this._shortBreakMinutes = DefaultShortBreakMinutes;
+        }
+
+        public void ResetAllTimeSettings()
+        {
+            this.ResetWorkMinutes();
+            this.ResetLongBreakMinutes();
+            this.ResetShortBreakMinutes();
+        }
+
         public Int32 CompletedPomodoros { get; private set; }
 
         public Boolean IsRunning { get; private set; }

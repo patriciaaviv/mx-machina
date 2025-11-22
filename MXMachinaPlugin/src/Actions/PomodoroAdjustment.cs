@@ -6,96 +6,76 @@ namespace Loupedeck.MXMachinaPlugin
     {
         private PomodoroTimer Timer => PomodoroService.Timer;
 
-        private Boolean _eventsSubscribed = false;
-
-        private void EnsureEventsSubscribed()
+        public PomodoroAdjustment() : base(hasReset: false)
         {
-            if (!this._eventsSubscribed)
+            this.DisplayName = "Timer Settings";
+            this.Description = "Adjustments for Timer Durations";
+            String[] timeParams = new String[] { "Work", "Short Break", "Long Break" };
+            foreach (String timeParam in timeParams)
             {
-                this.Timer.OnTick += () => this.AdjustmentValueChanged();
-                this.Timer.OnStateChanged += () => this.AdjustmentValueChanged();
-                this._eventsSubscribed = true;
+                this.AddParameter(timeParam, $"Adjust {timeParam} Time", "Time Settings");
             }
         }
 
-        public PomodoroAdjustment()
-            : base(displayName: "Timer Settings", description: "Adjust duration, press to reset", groupName: "Pomodoro", hasReset: true)
-        {
-        }
+        private Int32 GetTimeFromActionParameter(String actionParameter) =>
+            actionParameter switch
+            {
+                "Work" => this.Timer.WorkMinutes,
+                "Short Break" => this.Timer.ShortBreakMinutes,
+                "Long Break" => this.Timer.LongBreakMinutes,
+                _ => throw new ApplicationException(),
+            };
+
 
         protected override void ApplyAdjustment(String actionParameter, Int32 diff)
         {
-            this.EnsureEventsSubscribed();
-
-            // Only allow adjustment when timer is stopped
-            if (this.Timer.IsRunning)
+            switch (actionParameter)
             {
-                return;
-            }
-
-            switch (this.Timer.CurrentState)
-            {
-                case PomodoroState.Inactive:
-                    this.Timer.WorkMinutes = Math.Clamp(this.Timer.WorkMinutes + diff * 5, 5, 60);
-                    if (this.Timer.CurrentState == PomodoroState.Inactive || this.Timer.CurrentState == PomodoroState.Work)
-                    {
-                        this.Timer.Reset(); // Reset to apply new duration
-                    }
-                    PluginLog.Info($"Work duration: {this.Timer.WorkMinutes} min");
+                case "Work":
+                    this.Timer.WorkMinutes += diff * 5;
                     break;
-
-                case PomodoroState.ShortBreak:
-                    this.Timer.ShortBreakMinutes = Math.Clamp(this.Timer.ShortBreakMinutes + diff * 5, 5, 30);
-                    PluginLog.Info($"Short break duration: {this.Timer.ShortBreakMinutes} min");
+                case "Short Break":
+                    this.Timer.ShortBreakMinutes += diff * 5;
                     break;
-
-                case PomodoroState.LongBreak:
-                    this.Timer.LongBreakMinutes = Math.Clamp(this.Timer.LongBreakMinutes + diff * 5, 5, 60);
-                    PluginLog.Info($"Long break duration: {this.Timer.LongBreakMinutes} min");
-                    break;
-
-                default:
+                case "Long Break":
+                    this.Timer.LongBreakMinutes += diff * 5;
                     break;
             }
+            PluginLog.Info($"Changed {actionParameter} Duration: {GetTimeFromActionParameter(actionParameter)} min");
 
             // Play subtle sound for successful adjustment
+            // TODO: Remove sound/replace with haptics
             NotificationService.PlaySound("Tink");
-
             this.AdjustmentValueChanged();
         }
 
         protected override void RunCommand(String actionParameter)
         {
-            this.Timer.WorkMinutes = PomodoroTimer.DefaultWorkMinutes;
-            this.Timer.ShortBreakMinutes = PomodoroTimer.DefaultShortBreakMinutes;
-            this.Timer.LongBreakMinutes = PomodoroTimer.DefaultLongBreakMinutes;
-            this.Timer.Reset();
-            PluginLog.Info("All durations reset to defaults");
-            // Play sound for successful reset
-            NotificationService.PlaySound("Hero");
+            switch (actionParameter)
+            {
+                case "Work":
+                    this.Timer.ResetWorkMinutes();
+                    break;
+                case "Short Break":
+                    this.Timer.ResetShortBreakMinutes();
+                    break;
+                case "Long Break":
+                    this.Timer.ResetLongBreakMinutes();
+                    break;
+            }
+            PluginLog.Info($"Reset {actionParameter} duration to defaults");
             this.AdjustmentValueChanged();
+            this.ActionImageChanged();
         }
 
         protected override String GetAdjustmentValue(String actionParameter)
         {
-            var time = this.Timer.CurrentState switch
-            {
-                PomodoroState.ShortBreak => this.Timer.ShortBreakMinutes,
-                PomodoroState.LongBreak => this.Timer.LongBreakMinutes,
-                _ => this.Timer.WorkMinutes
-            };
-            return $"{time} min";
+            return $"{GetTimeFromActionParameter(actionParameter)} min";
         }
 
         protected override String GetAdjustmentDisplayName(String actionParameter, PluginImageSize imageSize)
         {
-            return this.Timer.CurrentState switch
-            {
-                PomodoroState.Inactive => "Change Work Time",
-                PomodoroState.ShortBreak => "Change Short Break Time",
-                PomodoroState.LongBreak => "Change Long Break Time",
-                _ => "Disabled"
-            };
+            return $"{actionParameter}{Environment.NewLine}{GetTimeFromActionParameter(actionParameter)} min";
         }
     }
 }
