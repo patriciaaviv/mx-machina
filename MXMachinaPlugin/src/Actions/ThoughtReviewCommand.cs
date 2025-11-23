@@ -29,7 +29,7 @@ namespace Loupedeck.MXMachinaPlugin
             // Open browser
             Process.Start(new ProcessStartInfo
             {
-                FileName = "http://localhost:8082/review",
+                FileName = "http://localhost:8082/review/",
                 UseShellExecute = true
             });
 
@@ -46,11 +46,11 @@ namespace Loupedeck.MXMachinaPlugin
             try
             {
                 _listener = new HttpListener();
-                _listener.Prefixes.Add("http://localhost:8082/review/");
+                _listener.Prefixes.Add("http://localhost:8082/");
                 _listener.Start();
                 _isRunning = true;
 
-                PluginLog.Info("Thought review server started on http://localhost:8082/review/");
+                PluginLog.Info("Thought review server started on http://localhost:8082/");
 
                 // Handle requests for 5 minutes
                 var endTime = DateTime.Now.AddMinutes(5);
@@ -59,9 +59,10 @@ namespace Loupedeck.MXMachinaPlugin
                     var context = await _listener.GetContextAsync();
                     var response = context.Response;
                     var request = context.Request;
+                    var path = request.Url.AbsolutePath;
 
                     // Handle mark as reviewed
-                    if (request.HttpMethod == "POST" && request.Url.AbsolutePath.Contains("/mark-reviewed"))
+                    if (request.HttpMethod == "POST" && path.Contains("/mark-reviewed"))
                     {
                         var body = await ReadRequestBodyAsync(request);
                         var thoughtIds = System.Text.Json.JsonSerializer.Deserialize<List<String>>(body);
@@ -72,13 +73,29 @@ namespace Loupedeck.MXMachinaPlugin
                         continue;
                     }
 
-                    var html = this.GenerateReviewHtml();
-                    var buffer = Encoding.UTF8.GetBytes(html);
+                    // Handle delete thoughts (permanently remove)
+                    if (request.HttpMethod == "POST" && path.Contains("/delete"))
+                    {
+                        var body = await ReadRequestBodyAsync(request);
+                        var thoughtIds = System.Text.Json.JsonSerializer.Deserialize<List<String>>(body);
+                        this.ThoughtService.DeleteThoughts(thoughtIds);
+                        
+                        response.StatusCode = 200;
+                        response.Close();
+                        continue;
+                    }
 
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentType = "text/html; charset=utf-8";
-                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                    response.Close();
+                    // Serve HTML page for /review/ or root
+                    if (path == "/review/" || path == "/review" || path == "/")
+                    {
+                        var html = this.GenerateReviewHtml();
+                        var buffer = Encoding.UTF8.GetBytes(html);
+
+                        response.ContentLength64 = buffer.Length;
+                        response.ContentType = "text/html; charset=utf-8";
+                        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                        response.Close();
+                    }
                 }
             }
             catch (Exception ex)
@@ -119,6 +136,10 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     categoriesHtml.AppendLine($@"
                             <li class='thought-item' data-id='{thought.Id}'>
+                                <label class='checkbox-container'>
+                                    <input type='checkbox' class='thought-checkbox' data-id='{thought.Id}' onchange='handleCheckboxChange(this)'>
+                                    <span class='checkmark'></span>
+                                </label>
                                 <span class='thought-text'>{EscapeHtml(thought.Text)}</span>
                                 <span class='thought-time'>{thought.CapturedAt:HH:mm}</span>
                             </li>");
@@ -190,6 +211,25 @@ namespace Loupedeck.MXMachinaPlugin
             background: #e9ecef;
             transform: translateX(4px);
         }}
+        .thought-item.completed {{
+            opacity: 0.6;
+            text-decoration: line-through;
+        }}
+        .checkbox-container {{
+            display: flex;
+            align-items: center;
+            margin-right: 12px;
+            cursor: pointer;
+        }}
+        .thought-checkbox {{
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin: 0;
+        }}
+        .checkmark {{
+            margin-left: 8px;
+        }}
         .thought-text {{
             flex: 1;
             color: #333;
@@ -253,7 +293,7 @@ namespace Loupedeck.MXMachinaPlugin
         function markAllReviewed() {{
             var thoughtIds = Array.from(document.querySelectorAll('.thought-item')).map(item => item.dataset.id);
             
-            fetch('/review/mark-reviewed', {{
+            fetch('/mark-reviewed', {{
                 method: 'POST',
                 headers: {{ 'Content-Type': 'application/json' }},
                 body: JSON.stringify(thoughtIds)
@@ -261,6 +301,41 @@ namespace Loupedeck.MXMachinaPlugin
                 alert('All thoughts marked as reviewed!');
                 location.reload();
             }});
+        }}
+
+        function handleCheckboxChange(checkbox) {{
+            var thoughtId = checkbox.dataset.id;
+            var thoughtItem = checkbox.closest('.thought-item');
+            
+            if (checkbox.checked) {{
+                // Mark as completed visually
+                thoughtItem.classList.add('completed');
+                
+                // Delete the thought permanently after a short delay for visual feedback
+                setTimeout(() => {{
+                    fetch('/delete', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify([thoughtId])
+                    }}).then(() => {{
+                        // Remove from DOM with animation
+                        thoughtItem.style.transition = 'all 0.3s ease-out';
+                        thoughtItem.style.opacity = '0';
+                        thoughtItem.style.transform = 'translateX(-20px)';
+                        setTimeout(() => {{
+                            thoughtItem.remove();
+                            // Reload if no thoughts left
+                            if (document.querySelectorAll('.thought-item').length === 0) {{
+                                location.reload();
+                            }}
+                        }}, 300);
+                    }}).catch(err => {{
+                        console.error('Error deleting thought:', err);
+                        checkbox.checked = false;
+                        thoughtItem.classList.remove('completed');
+                    }});
+                }}, 200);
+            }}
         }}
     </script>
 </body>

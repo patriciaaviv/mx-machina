@@ -1,0 +1,15 @@
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/bin/Debug/net8.0/TestThoughtCategorization
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/bin/Debug/net8.0/TestThoughtCategorization.deps.json
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/bin/Debug/net8.0/TestThoughtCategorization.runtimeconfig.json
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/bin/Debug/net8.0/TestThoughtCategorization.dll
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/bin/Debug/net8.0/TestThoughtCategorization.pdb
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.GeneratedMSBuildEditorConfig.editorconfig
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.AssemblyInfoInputs.cache
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.AssemblyInfo.cs
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.csproj.CoreCompileInputs.cache
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.sourcelink.json
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.dll
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/refint/TestThoughtCategorization.dll
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.pdb
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/TestThoughtCategorization.genruntimeconfig.cache
+/Users/giursan/Documents/Coding/hackatum/mx-machina/TestThoughtCategorization/obj/Debug/net8.0/ref/TestThoughtCategorization.dll

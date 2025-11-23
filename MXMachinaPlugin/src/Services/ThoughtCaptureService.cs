@@ -83,9 +83,9 @@ namespace Loupedeck.MXMachinaPlugin
         }
 
         /// <summary>
-        /// Captures a thought and adds it to the queue
+        /// Captures a thought and adds it to the queue, then categorizes it automatically
         /// </summary>
-        public void CaptureThought(String thoughtText)
+        public async Task CaptureThoughtAsync(String thoughtText)
         {
             if (String.IsNullOrWhiteSpace(thoughtText))
             {
@@ -102,6 +102,37 @@ namespace Loupedeck.MXMachinaPlugin
             this.SaveData();
 
             PluginLog.Info($"Thought captured: {thoughtText}");
+
+            // Automatically categorize the thought
+            try
+            {
+                await this.CategorizeSingleThoughtAsync(thought);
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "Failed to categorize thought automatically");
+                // Fallback to keyword-based categorization
+                this.CategorizeWithKeywords(new List<ThoughtItem> { thought });
+            }
+        }
+
+        /// <summary>
+        /// Captures a thought and adds it to the queue (synchronous version for backward compatibility)
+        /// </summary>
+        public void CaptureThought(String thoughtText)
+        {
+            // Fire and forget async categorization
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await this.CaptureThoughtAsync(thoughtText);
+                }
+                catch (Exception ex)
+                {
+                    PluginLog.Error(ex, "Failed to capture thought asynchronously");
+                }
+            });
         }
 
         /// <summary>
@@ -228,6 +259,79 @@ Return ONLY a JSON array of category names, one per thought, in order. Example: 
         }
 
         /// <summary>
+        /// Categorizes a single thought using AI
+        /// </summary>
+        private async Task CategorizeSingleThoughtAsync(ThoughtItem thought)
+        {
+            var apiKey = this.LoadOpenAIApiKey();
+            if (String.IsNullOrEmpty(apiKey))
+            {
+                PluginLog.Warning("OpenAI API key not found, using keyword-based categorization");
+                this.CategorizeWithKeywords(new List<ThoughtItem> { thought });
+                return;
+            }
+
+            try
+            {
+                var prompt = $@"Categorize the following distracting thought into one of these categories: Work, Personal, Urgent, Shopping, Health, Other.
+
+Thought: {thought.Text}
+
+Return ONLY the category name as a single word. Example: ""Work"" or ""Personal""";
+
+                var requestBody = new
+                {
+                    model = "gpt-3.5-turbo",
+                    messages = new[]
+                    {
+                        new { role = "user", content = prompt }
+                    },
+                    temperature = 0.3,
+                    max_tokens = 50
+                };
+
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+                request.Headers.Add("Authorization", $"Bearer {apiKey}");
+                request.Content = content;
+
+                var response = await this._httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    var responseData = JsonSerializer.Deserialize<JsonElement>(responseJson);
+                    
+                    if (responseData.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
+                    {
+                        var message = choices[0].GetProperty("message").GetProperty("content").GetString();
+                        // Clean up the response (remove quotes, whitespace)
+                        var category = message?.Trim().Trim('"', '\'', ' ').Trim();
+                        
+                        // Validate category
+                        var validCategories = new[] { "Work", "Personal", "Urgent", "Shopping", "Health", "Other" };
+                        if (validCategories.Contains(category, StringComparer.OrdinalIgnoreCase))
+                        {
+                            thought.Category = validCategories.First(c => String.Equals(c, category, StringComparison.OrdinalIgnoreCase));
+                            this.SaveData();
+                            PluginLog.Info($"Thought categorized as: {thought.Category}");
+                            return;
+                        }
+                    }
+                }
+                
+                PluginLog.Warning("Failed to get valid category from OpenAI, using keyword-based categorization");
+                this.CategorizeWithKeywords(new List<ThoughtItem> { thought });
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error(ex, "OpenAI API call failed for single thought categorization");
+                this.CategorizeWithKeywords(new List<ThoughtItem> { thought });
+            }
+        }
+
+        /// <summary>
         /// Fallback categorization using keywords
         /// </summary>
         private void CategorizeWithKeywords(List<ThoughtItem> thoughts)
@@ -264,24 +368,104 @@ Return ONLY a JSON array of category names, one per thought, in order. Example: 
         }
 
         /// <summary>
-        /// Loads OpenAI API key from secrets.json
+        /// Loads OpenAI API key from secrets.json (searches multiple locations including project root)
         /// </summary>
         private String LoadOpenAIApiKey()
         {
             try
             {
-                var secretsPath = Path.Combine(GetDataDirectory(), "secrets.json");
-                if (File.Exists(secretsPath))
+                var searchPaths = new List<String>();
+
+                // 1. First check the data directory (for deployed plugin)
+                var dataDirPath = Path.Combine(GetDataDirectory(), "secrets.json");
+                searchPaths.Add(dataDirPath);
+
+                // 2. Check assembly directory and parent directories (for development)
+                var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                var pluginDirectory = Path.GetDirectoryName(assemblyLocation);
+                if (!String.IsNullOrEmpty(pluginDirectory))
                 {
-                    var json = File.ReadAllText(secretsPath);
-                    var secrets = JsonSerializer.Deserialize<JsonElement>(json);
-                    
-                    if (secrets.TryGetProperty("OpenAI", out var openai))
+                    searchPaths.Add(Path.Combine(pluginDirectory, "secrets.json"));
+
+                    // Walk up parent directories looking for project root
+                    var currentDir = new DirectoryInfo(pluginDirectory);
+                    while (currentDir != null && currentDir.Parent != null)
                     {
-                        if (openai.TryGetProperty("ApiKey", out var apiKey))
+                        var potentialSecrets = Path.Combine(currentDir.FullName, "secrets.json");
+                        if (!searchPaths.Contains(potentialSecrets))
                         {
-                            return apiKey.GetString();
+                            searchPaths.Add(potentialSecrets);
                         }
+
+                        // Check if we're at the project root (has MXMachinaPlugin folder)
+                        var mxMachinaPluginPath = Path.Combine(currentDir.FullName, "MXMachinaPlugin");
+                        if (Directory.Exists(mxMachinaPluginPath))
+                        {
+                            var rootSecrets = Path.Combine(currentDir.FullName, "secrets.json");
+                            if (!searchPaths.Contains(rootSecrets))
+                            {
+                                // Prioritize project root by adding it early
+                                searchPaths.Insert(1, rootSecrets);
+                            }
+                        }
+
+                        currentDir = currentDir.Parent;
+                    }
+                }
+
+                // Find first existing file with valid API key
+                String foundPath = null;
+                foreach (var path in searchPaths)
+                {
+                    if (File.Exists(path))
+                    {
+                        try
+                        {
+                            var json = File.ReadAllText(path);
+                            if (String.IsNullOrWhiteSpace(json))
+                            {
+                                continue;
+                            }
+
+                            var secrets = JsonSerializer.Deserialize<JsonElement>(json);
+
+                            if (secrets.TryGetProperty("OpenAI", out var openai))
+                            {
+                                if (openai.TryGetProperty("ApiKey", out var apiKey))
+                                {
+                                    var key = apiKey.GetString();
+                                    if (!String.IsNullOrEmpty(key) && key != "KEY" && key != "your-actual-openai-api-key-here")
+                                    {
+                                        foundPath = path;
+                                        PluginLog.Info($"OpenAI API key loaded from: {foundPath}");
+                                        return key;
+                                    }
+                                }
+                            }
+                        }
+                        catch (JsonException ex)
+                        {
+                            PluginLog.Warning($"Invalid JSON in {path}: {ex.Message}");
+                            continue;
+                        }
+                        catch (Exception ex)
+                        {
+                            PluginLog.Warning($"Error reading {path}: {ex.Message}");
+                            continue;
+                        }
+                    }
+                }
+
+                if (foundPath == null)
+                {
+                    PluginLog.Warning("secrets.json not found or OpenAI.ApiKey is invalid. Searched locations:");
+                    foreach (var path in searchPaths.Take(10)) // Limit output to first 10 paths
+                    {
+                        PluginLog.Warning($"  - {path}");
+                    }
+                    if (searchPaths.Count > 10)
+                    {
+                        PluginLog.Warning($"  ... and {searchPaths.Count - 10} more locations");
                     }
                 }
             }
@@ -307,6 +491,39 @@ Return ONLY a JSON array of category names, one per thought, in order. Example: 
                 }
             }
             this.SaveData();
+        }
+
+        /// <summary>
+        /// Deletes thoughts permanently (removes them from storage)
+        /// </summary>
+        public void DeleteThoughts(List<String> thoughtIds)
+        {
+            var removedCount = 0;
+            foreach (var id in thoughtIds)
+            {
+                var thought = this._data.Thoughts.FirstOrDefault(t => t.Id == id);
+                if (thought != null)
+                {
+                    this._data.Thoughts.Remove(thought);
+                    removedCount++;
+                }
+            }
+            this.SaveData();
+            PluginLog.Info($"Deleted {removedCount} thought(s) permanently");
+        }
+
+        /// <summary>
+        /// Deletes a single thought permanently
+        /// </summary>
+        public void DeleteThought(String thoughtId)
+        {
+            var thought = this._data.Thoughts.FirstOrDefault(t => t.Id == thoughtId);
+            if (thought != null)
+            {
+                this._data.Thoughts.Remove(thought);
+                this.SaveData();
+                PluginLog.Info($"Deleted thought: {thought.Text}");
+            }
         }
 
         /// <summary>

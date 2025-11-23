@@ -19,7 +19,7 @@ namespace Loupedeck.MXMachinaPlugin
         protected override void RunCommand(String actionParameter)
         {
             // Run on background thread to avoid blocking
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 try
                 {
@@ -28,8 +28,8 @@ namespace Loupedeck.MXMachinaPlugin
 
                     if (!String.IsNullOrWhiteSpace(thought))
                     {
-                        // Capture the thought
-                        this.ThoughtService.CaptureThought(thought);
+                        // Capture the thought (async categorization happens automatically)
+                        await this.ThoughtService.CaptureThoughtAsync(thought);
 
                         // Play satisfying "whoosh" sound
                         MacTextInputHelper.PlayWhooshSound();
@@ -41,7 +41,7 @@ namespace Loupedeck.MXMachinaPlugin
                             "Glass"
                         );
 
-                        PluginLog.Info($"Thought captured: {thought}");
+                        PluginLog.Info($"Thought captured and categorized: {thought}");
                     }
                     else
                     {
