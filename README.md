@@ -12,6 +12,8 @@ A productivity-focused plugin for the Logitech MX 4 mouse that brings a full-fea
 - **Focus Mode** - Closes distracting apps (Discord, Slack, Steam, etc.) with one button press
 - **Smart Notifications** - macOS notifications for timer events
 - **Persistent Data** - OAuth tokens and statistics persist across restarts
+- **Thought Capture** - Take quick notes during focus time to minimize disruptions & review them anytime
+- **Ambient Sound** - Plays situation-based ambient sounds to help you focus & boost productivity
 
 ## Installation
 
@@ -132,6 +134,7 @@ MIT License
 ## Author
 
 Built with the Logitech Actions SDK
+
 
 
 
