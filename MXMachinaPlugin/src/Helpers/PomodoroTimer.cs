@@ -35,6 +35,8 @@ namespace Loupedeck.MXMachinaPlugin
         public event Action OnTick;
         public event Action OnStateChanged;
         public event Action<PomodoroPhase> OnSessionComplete;
+        public event Action OnPause;
+        public event Action OnWorkBegin;
 
         public TimerState State { get; private set; } = TimerState.Stopped;
 
@@ -115,15 +117,20 @@ namespace Loupedeck.MXMachinaPlugin
         {
             if (this.RemainingTime <= TimeSpan.Zero)
             {
-                // Timer completed - fire event and advance to next phase
-                var completedPhase = this.Phase;
-                OnSessionComplete?.Invoke(completedPhase);
+                // Timer completed - advance to next phase
+                CompleteWorkSession();
                 this.Skip();
             }
             else
             {
                 OnTick?.Invoke();
             }
+        }
+
+        private void CompleteWorkSession()
+        {
+            this.CompletedPomodoros++;
+            OnSessionComplete?.Invoke(PomodoroPhase.Work);
         }
 
         private TimeSpan GetDurationForPhase(PomodoroPhase phase) => phase switch
@@ -159,6 +166,7 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 case TimerState.WorkRunning:
                     this.StartTimer(isNewPhase, PomodoroPhase.Work);
+                    this.OnWorkBegin?.Invoke();
                     if (oldState == TimerState.WorkPaused)
                     {
                         PomodoroService.Notification.ShowNotification("▶️ Resuming Timer", $"Keep going for {GetDisplayTime()}!", "Blow");
@@ -240,6 +248,7 @@ namespace Loupedeck.MXMachinaPlugin
             if (this.State == TimerState.WorkRunning)
             {
                 this.TransitionToState(TimerState.WorkPaused);
+                this.OnPause?.Invoke();
             }
         }
 
@@ -268,7 +277,7 @@ namespace Loupedeck.MXMachinaPlugin
 
             if (this.Phase == PomodoroPhase.Work)
             {
-                this.CompletedPomodoros++;
+                this.CompleteWorkSession();
                 newState = (this.CompletedPomodoros % PomodorosBeforeLongBreak == 0)
                     ? TimerState.LongBreak
                     : TimerState.ShortBreak;

@@ -12,7 +12,6 @@ namespace Loupedeck.MXMachinaPlugin
         private static FocusModeService _focusModeService;
         private static NotificationService _notificationService;
         private static HapticService _hapticService;
-        private static Boolean _wasRunning = false;
 
         public static PomodoroTimer Timer
         {
@@ -35,31 +34,16 @@ namespace Loupedeck.MXMachinaPlugin
             _hapticService = haptics;
 
             // Hook up haptics to timer events
-            Timer.OnTick += () =>
+            Timer.OnPause += () =>
             {
-                if (Timer.IsRunning && !_wasRunning)
-                {
-                    // Timer just started
-                    _hapticService?.TriggerTimerStart();
-                }
-                else if (!Timer.IsRunning && _wasRunning)
-                {
-                    // Timer just paused
-                    _hapticService?.TriggerTimerPause();
-                }
-                _wasRunning = Timer.IsRunning;
+                // Pause
+                _hapticService?.TriggerTimerPause();
             };
 
-            Timer.OnSessionComplete += (state) =>
+            Timer.OnWorkBegin += () =>
             {
-                if (state == PomodoroState.Work)
-                {
-                    _hapticService?.TriggerWorkComplete();
-                }
-                else
-                {
-                    _hapticService?.TriggerBreakComplete();
-                }
+                // Work Begin = Resume
+                _hapticService?.TriggerTimerStart();
             };
 
             // Hook up haptics to focus mode
@@ -83,9 +67,6 @@ namespace Loupedeck.MXMachinaPlugin
             // Use smart work duration suggestions and show completion notifications
             Timer.OnSessionComplete += async (phase) =>
             {
-                // Show completion notification
-                PomodoroService.Notification.NotifySessionComplete(phase, Timer.CompletedPomodoros);
-
                 // Record session in statistics
                 var duration = phase switch
                 {
