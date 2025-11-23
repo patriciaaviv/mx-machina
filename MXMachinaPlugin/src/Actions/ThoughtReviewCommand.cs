@@ -354,11 +354,6 @@ namespace Loupedeck.MXMachinaPlugin
 
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize)
         {
-            var unreviewedCount = this.ThoughtService.GetUnreviewedThoughts().Count;
-            if (unreviewedCount > 0)
-            {
-                return $"Review\n({unreviewedCount})";
-            }
             return "Review\nThoughts";
         }
     }
