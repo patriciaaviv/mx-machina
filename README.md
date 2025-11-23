@@ -98,7 +98,7 @@ All data is stored in `~/Library/Application Support/MXMachinaPlugin/`:
 
 - .NET 8.0 SDK
 - Logitech Options+ with Actions SDK
-- Possession of a Logitech MX 4 mouse 😄
+- Possession of a Logitech MX 4 mouse 😄🐭
 
 ### Building
 
@@ -134,6 +134,7 @@ MIT License
 ## Author
 
 Built with the Logitech Actions SDK
+
 
 
 
