@@ -55,6 +55,8 @@ A productivity-focused plugin for the Logitech MX 4 mouse that brings a full-fea
 | **Calendar Auth** | Authenticate with Google Calendar. Shows connection status. |
 | **Statistics** | Opens web dashboard with your productivity stats. |
 | **Focus Mode** | Toggles focus mode - closes distracting apps. |
+| **Capture & Review Thoughts** | Take notes while focussing directly where you click. |
+| **Ambient Sounds** | AI-generated ambient sound playlist that matches your current workflow and mood. |
 
 ## Statistics Dashboard
 
@@ -117,15 +119,25 @@ src/
 │   ├── PomodoroAdjustment.cs
 │   ├── GoogleCalendarAuthCommand.cs
 │   ├── StatisticsCommand.cs
-│   └── FocusModeCommand.cs
+│   ├── FocusModeCommand.cs
+│   ├── FrequencySoundCommand.cs
+│   ├── ResetCommand.cs
+│   ├── ThoughtCaptureCommand.cs
+│   └── ThoughtReviewCommand.cs
 ├── Services/          # Core services
+│   ├── PomodoroService.cs
 │   ├── GoogleCalendarService.cs
 │   ├── StatisticsService.cs
 │   ├── FocusModeService.cs
 │   ├── NotificationService.cs
-│   └── PomodoroService.cs
+│   ├── ThoughtCaptureService.cs
+│   ├── FrequencySoundService.cs
+│   └── HapticService.cs
 └── Helpers/
-    └── PomodoroTimer.cs
+    ├── PomodoroTimer.cs
+    ├── MacTextInputHelper.cs
+    ├── PluginLog.cs
+    └── PluginResources.cs
 ```
 
 ## License
@@ -135,3 +147,4 @@ MIT License
 ## Author
 
 Built with the Logitech Actions SDK
+
