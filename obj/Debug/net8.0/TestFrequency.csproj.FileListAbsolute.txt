@@ -1,5 +1,0 @@
-/Users/silv/Documents/Programming/mx-machina/obj/Debug/net8.0/TestFrequency.GeneratedMSBuildEditorConfig.editorconfig
-/Users/silv/Documents/Programming/mx-machina/obj/Debug/net8.0/TestFrequency.AssemblyInfoInputs.cache
-/Users/silv/Documents/Programming/mx-machina/obj/Debug/net8.0/TestFrequency.AssemblyInfo.cs
-/Users/silv/Documents/Programming/mx-machina/obj/Debug/net8.0/TestFrequency.csproj.CoreCompileInputs.cache
-/Users/silv/Documents/Programming/mx-machina/obj/Debug/net8.0/TestFrequency.sourcelink.json
