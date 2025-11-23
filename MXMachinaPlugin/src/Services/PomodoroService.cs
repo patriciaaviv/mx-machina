@@ -12,6 +12,7 @@ namespace Loupedeck.MXMachinaPlugin
         private static FocusModeService _focusModeService;
         private static NotificationService _notificationService;
         private static HapticService _hapticService;
+        private static FrequencySoundService _frequencySoundService;
 
         public static PomodoroTimer Timer
         {
@@ -142,6 +143,18 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     _focusModeService ??= new FocusModeService();
                     return _focusModeService;
+                }
+            }
+        }
+
+        public static FrequencySoundService FrequencySound
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    _frequencySoundService ??= new FrequencySoundService();
+                    return _frequencySoundService;
                 }
             }
         }

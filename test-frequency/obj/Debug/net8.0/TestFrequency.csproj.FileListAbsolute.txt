@@ -1,0 +1,15 @@
+/Users/silv/Documents/Programming/mx-machina/test-frequency/bin/Debug/net8.0/TestFrequency
+/Users/silv/Documents/Programming/mx-machina/test-frequency/bin/Debug/net8.0/TestFrequency.deps.json
+/Users/silv/Documents/Programming/mx-machina/test-frequency/bin/Debug/net8.0/TestFrequency.runtimeconfig.json
+/Users/silv/Documents/Programming/mx-machina/test-frequency/bin/Debug/net8.0/TestFrequency.dll
+/Users/silv/Documents/Programming/mx-machina/test-frequency/bin/Debug/net8.0/TestFrequency.pdb
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.GeneratedMSBuildEditorConfig.editorconfig
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.AssemblyInfoInputs.cache
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.AssemblyInfo.cs
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.csproj.CoreCompileInputs.cache
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.sourcelink.json
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.dll
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/refint/TestFrequency.dll
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.pdb
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/TestFrequency.genruntimeconfig.cache
+/Users/silv/Documents/Programming/mx-machina/test-frequency/obj/Debug/net8.0/ref/TestFrequency.dll
