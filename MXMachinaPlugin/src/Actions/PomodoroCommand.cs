@@ -62,9 +62,6 @@ namespace Loupedeck.MXMachinaPlugin
                 _ => throw new ApplicationException()
             };
         }
-
-
-        // NOTE: Vibe Coded:
         protected override BitmapImage GetCommandImage(String actionParameter, PluginImageSize imageSize)
         {
             this.EnsureEventsSubscribed();

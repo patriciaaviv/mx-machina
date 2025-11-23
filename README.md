@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MX-Machina Plugin
 <p align="center">
    <img width="400" height="400" alt="ChatGPT Image Nov 22, 2025, 09_08_12 PM" src="https://github.com/user-attachments/assets/5ff13646-94e5-49d2-a3de-54fb57da763d" />
@@ -134,9 +135,3 @@ MIT License
 ## Author
 
 Built with the Logitech Actions SDK
-
-
-
-
-
-
