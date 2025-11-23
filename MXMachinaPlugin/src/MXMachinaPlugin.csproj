@@ -8,6 +8,10 @@
 
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    
+    <!-- Disable auto-generated assembly info to avoid duplicates -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
