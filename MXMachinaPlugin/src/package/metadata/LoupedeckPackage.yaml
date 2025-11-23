@@ -12,7 +12,7 @@ name: MXMachina
 displayName: MXMachina
 
 # Short description of the plugin.
-description: TODO
+description: Smart Pomodoro timer with thought capture and AI-powered categorization
 # Name of the plugin library file.
 pluginFileName: MXMachinaPlugin.dll
 

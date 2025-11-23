@@ -1,5 +1,28 @@
+# IDE and editor files
 .pre-commit-config.yaml
 .claude/
 **/.vscode/
+**/.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+**/bin/
+**/obj/
+**/*.dll
+**/*.pdb
+**/*.exe
+
+# Secrets and configuration
 secrets.json
-.gitignore
+**/secrets.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test projects (if any remain)
+**/Test*/
+
+README.md
