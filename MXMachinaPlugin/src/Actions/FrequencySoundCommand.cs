@@ -24,6 +24,17 @@ namespace Loupedeck.MXMachinaPlugin
                 return;
             }
 
+            // Check if timer is running
+            if (!PomodoroService.Timer.IsRunning)
+            {
+                PomodoroService.Notification.ShowNotification(
+                    "Frequency Sound",
+                    "Timer must be running to use frequency sounds",
+                    "Basso"
+                );
+                return;
+            }
+
             if (this.FrequencySound.IsPlaying)
             {
                 this.FrequencySound.StopFrequency(useFadeOut: true);
@@ -36,46 +47,57 @@ namespace Loupedeck.MXMachinaPlugin
                 return;
             }
 
-            // Play contextual noise based on Pomodoro timer state
-            var timer = PomodoroService.Timer;
-            var duration = 30; // Default 30 seconds
-
-            // Adjust duration based on timer state - play for remaining time if timer is running
-            if (timer.IsRunning && timer.CurrentState == PomodoroState.Work)
-            {
-                var remaining = (Int32)timer.RemainingTime.TotalMinutes;
-                duration = Math.Min(remaining * 60, 300); // Up to 5 minutes, but not longer than remaining time
-            }
-            else if (timer.IsRunning && (timer.CurrentState == PomodoroState.ShortBreak || timer.CurrentState == PomodoroState.LongBreak))
-            {
-                var remaining = (Int32)timer.RemainingTime.TotalMinutes;
-                duration = Math.Min(remaining * 60, 180); // Up to 3 minutes for breaks
-            }
-
-            // Determine noise type based on context
-            var noiseType = this.FrequencySound.DetermineNoiseTypeForContext();
-            var noiseName = noiseType switch
-            {
-                NoiseType.PinkNoise => "Pink Noise (Soft)",
-                NoiseType.WhiteNoise => "White Noise (Sleep)",
-                NoiseType.BrownNoise => "Brown Noise (Deep)",
-                NoiseType.GreenNoise => "Green Noise (Calming)",
-                NoiseType.BlueNoise => "Blue Noise (Lively)",
-                NoiseType.VioletNoise => "Violet Noise (Uplifting)",
-                NoiseType.GreyNoise => "Grey Noise (Balanced)",
-                _ => "Noise"
-            };
-
-            this.FrequencySound.PlayNoise(noiseType, duration);
-
-            // Update UI after sound starts
-            this.ActionImageChanged();
-
+            // Get LLM-generated playlist based on context
             PomodoroService.Notification.ShowNotification(
                 "Frequency Sound",
-                $"Playing {noiseName}",
+                "Generating playlist...",
                 "Glass"
             );
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var playlist = await this.FrequencySound.GetRecommendedPlaylistAsync();
+                    
+                    if (playlist != null && playlist.Segments.Count > 0)
+                    {
+                        var segmentCount = playlist.Segments.Count;
+                        var totalMinutes = playlist.TotalDurationSeconds / 60;
+                        
+                        PomodoroService.Notification.ShowNotification(
+                            "Frequency Sound",
+                            $"Playing {segmentCount} segments ({totalMinutes} min)",
+                            "Glass"
+                        );
+
+                        // Update UI
+                        this.ActionImageChanged();
+
+                        // Play the playlist
+                        this.FrequencySound.PlayPlaylist(playlist);
+                    }
+                    else
+                    {
+                        PomodoroService.Notification.ShowNotification(
+                            "Frequency Sound",
+                            "Failed to generate playlist",
+                            "Basso"
+                        );
+                        this.ActionImageChanged();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PluginLog.Error(ex, "Failed to play frequency sound playlist");
+                    PomodoroService.Notification.ShowNotification(
+                        "Frequency Sound",
+                        "Error: Check OpenAI configuration",
+                        "Basso"
+                    );
+                    this.ActionImageChanged();
+                }
+            });
         }
 
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize)
@@ -83,6 +105,11 @@ namespace Loupedeck.MXMachinaPlugin
             if (!this.FrequencySound.IsMacOS)
             {
                 return "Frequency\n(macOS only)";
+            }
+
+            if (!PomodoroService.Timer.IsRunning)
+            {
+                return "Frequency\n(Start timer)";
             }
 
             if (this.FrequencySound.IsPlaying)
@@ -102,6 +129,12 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     bitmapBuilder.Clear(BitmapColor.Black);
                     bitmapBuilder.DrawText("macOS\nonly", BitmapColor.White);
+                }
+                else if (!PomodoroService.Timer.IsRunning)
+                {
+                    // Timer not running - show disabled state
+                    bitmapBuilder.Clear(new BitmapColor(60, 60, 60)); // Dark gray
+                    bitmapBuilder.DrawText("🔊\nTimer\nneeded", BitmapColor.White);
                 }
                 else if (this.FrequencySound.IsPlaying)
                 {
