@@ -97,7 +97,7 @@ namespace Loupedeck.MXMachinaPlugin
                 }
 
                 // Categorize captured thoughts after work session completes
-                if (state == PomodoroState.Work)
+                if (phase == PomodoroPhase.Work)
                 {
                     try
                     {
