@@ -13,6 +13,7 @@ namespace Loupedeck.MXMachinaPlugin
         private static NotificationService _notificationService;
         private static HapticService _hapticService;
         private static FrequencySoundService _frequencySoundService;
+        private static ThoughtCaptureService _thoughtCaptureService;
 
         public static PomodoroTimer Timer
         {
@@ -94,6 +95,30 @@ namespace Loupedeck.MXMachinaPlugin
                         PluginLog.Error(ex, "Failed to create calendar event");
                     }
                 }
+
+                // Categorize captured thoughts after work session completes
+                if (state == PomodoroState.Work)
+                {
+                    try
+                    {
+                        var unreviewedCount = ThoughtCapture.GetUnreviewedThoughts().Count;
+                        if (unreviewedCount > 0)
+                        {
+                            PluginLog.Info($"Categorizing {unreviewedCount} captured thoughts...");
+                            await ThoughtCapture.CategorizeThoughtsAsync();
+                            
+                            PomodoroService.Notification.ShowNotification(
+                                "💭 Thoughts Ready",
+                                $"You have {unreviewedCount} thought(s) to review",
+                                "Purr"
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        PluginLog.Error(ex, "Failed to categorize thoughts");
+                    }
+                }
             };
 
             PluginLog.Info("Smart Pomodoro features initialized");
@@ -155,6 +180,18 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     _frequencySoundService ??= new FrequencySoundService();
                     return _frequencySoundService;
+                }
+            }
+        }
+
+        public static ThoughtCaptureService ThoughtCapture
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    _thoughtCaptureService ??= new ThoughtCaptureService();
+                    return _thoughtCaptureService;
                 }
             }
         }

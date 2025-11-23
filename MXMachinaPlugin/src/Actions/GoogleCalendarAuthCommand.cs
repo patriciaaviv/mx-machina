@@ -27,7 +27,7 @@ namespace Loupedeck.MXMachinaPlugin
                 if (calendar.IsAuthenticated)
                 {
                     PomodoroService.Notification.ShowNotification(
-                        "✅ Already Authenticated",
+                        "Already Authenticated",
                         "Google Calendar is already connected.",
                         "Glass"
                     );
@@ -46,7 +46,7 @@ namespace Loupedeck.MXMachinaPlugin
                     if (String.IsNullOrEmpty(authUrl))
                     {
                         PomodoroService.Notification.ShowNotification(
-                            "❌ Missing Credentials",
+                            "Missing Credentials",
                             "secrets.json not found or invalid.",
                             "Basso"
                         );
@@ -77,7 +77,7 @@ namespace Loupedeck.MXMachinaPlugin
                         if (success)
                         {
                             PomodoroService.Notification.ShowNotification(
-                                "✅ Connected!",
+                                "Connected!",
                                 "Google Calendar is now linked.",
                                 "Hero"
                             );
@@ -86,7 +86,7 @@ namespace Loupedeck.MXMachinaPlugin
                         else
                         {
                             PomodoroService.Notification.ShowNotification(
-                                "❌ Auth Failed",
+                                "Auth Failed",
                                 "Could not complete authentication.",
                                 "Basso"
                             );
@@ -98,7 +98,7 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     PluginLog.Error(ex, "Google Calendar authentication error");
                     PomodoroService.Notification.ShowNotification(
-                        "❌ Error",
+                        "Error",
                         "Authentication failed. Check logs.",
                         "Basso"
                     );
@@ -109,7 +109,7 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 PluginLog.Error(ex, "GoogleCalendarAuthCommand: Failed to start auth flow");
                 PomodoroService.Notification.ShowNotification(
-                    "❌ Error",
+                    "Error",
                     "Failed to start authentication.",
                     "Basso"
                 );

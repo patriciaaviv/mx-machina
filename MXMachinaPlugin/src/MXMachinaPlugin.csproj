@@ -44,7 +44,9 @@
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Condition="$(OS) == 'Windows_NT'" Command="if not exist &quot;$(PluginDir)&quot; mkdir &quot;$(PluginDir)&quot;" />
     <Exec Condition="$(OS) == 'Windows_NT'" Command="echo $(BaseOutputPath)$(Configuration)\ &gt; &quot;$(PluginDir)$(ProjectName).link&quot;" />
+    <Exec Condition="$(OS) != 'Windows_NT'" Command="mkdir -p $(PluginDir)" />
     <Exec Condition="$(OS) != 'Windows_NT'" Command="echo $(BaseOutputPath)$(Configuration)\ &gt; $(PluginDir)$(ProjectName).link" />
     <Message Text="🔨 Created plugin link at: $(PluginDir)$(ProjectName).link" Importance="High" />
 
