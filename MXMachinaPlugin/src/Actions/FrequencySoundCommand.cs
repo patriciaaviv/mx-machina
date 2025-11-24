@@ -71,11 +71,12 @@ namespace Loupedeck.MXMachinaPlugin
                             "Glass"
                         );
 
-                        // Update UI
-                        this.ActionImageChanged();
 
                         // Play the playlist
                         this.FrequencySound.PlayPlaylist(playlist);
+
+                        // Update UI
+                        this.ActionImageChanged();
                     }
                     else
                     {
@@ -134,17 +135,17 @@ namespace Loupedeck.MXMachinaPlugin
                 {
                     // Timer not running - show disabled state
                     bitmapBuilder.Clear(new BitmapColor(60, 60, 60)); // Dark gray
-                    bitmapBuilder.DrawText("🔊\nTimer\nneeded", BitmapColor.White);
+                    bitmapBuilder.DrawText("\nTimer\nneeded", BitmapColor.White);
                 }
                 else if (this.FrequencySound.IsPlaying)
                 {
                     bitmapBuilder.Clear(BitmapColor.Green);
-                    bitmapBuilder.DrawText("🔊\nON", BitmapColor.White);
+                    bitmapBuilder.DrawText("ON", BitmapColor.White);
                 }
                 else
                 {
                     bitmapBuilder.Clear(BitmapColor.Blue);
-                    bitmapBuilder.DrawText("🔊\nOFF", BitmapColor.White);
+                    bitmapBuilder.DrawText("OFF", BitmapColor.White);
                 }
 
                 return bitmapBuilder.ToImage();
@@ -152,4 +153,3 @@ namespace Loupedeck.MXMachinaPlugin
         }
     }
 }
-
