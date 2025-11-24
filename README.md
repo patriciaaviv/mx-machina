@@ -19,6 +19,18 @@ A productivity-focused plugin for the Logitech MX 4 mouse that brings a full-fea
 
 1. Build the plugin using Visual Studio or `dotnet build`
 2. The plugin will be available in Logitech Options+
+3. **Optional:** Create `secrets.json` in `$HOME/Library/Application\ Support/MXMachinaPlugin/`:
+```json
+{
+  "GoogleCalendar": {
+    "ClientId": "YOUR_CLIENT_ID",
+    "ClientSecret": "YOUR_CLIENT_SECRET"
+  },
+  "OpenAI": {
+    "ApiKey": "YOUR_OPENAI_API_KEY"
+  }
+}
+```
 
 ## Configuration
 
@@ -31,8 +43,8 @@ A productivity-focused plugin for the Logitech MX 4 mouse that brings a full-fea
    - Application type: **Web application**
    - Authorized redirect URI: `http://localhost:8080/callback`
 5. Copy your Client ID and Client Secret
+6. Update the data in `$HOME/Library/Application\ Support/MXMachinaPlugin/secrets.json`:
 
-6. Create `secrets.json` in `~/Library/Application Support/MXMachinaPlugin/`:
 
 ```json
 {
@@ -44,6 +56,21 @@ A productivity-focused plugin for the Logitech MX 4 mouse that brings a full-fea
 ```
 
 7. Add your email as a test user in OAuth consent screen settings
+
+### OpenAI Setup
+
+1.	Go to the OpenAI Dashboard: https://platform.openai.com/account/api-keys
+2.	Click Create new secret key
+3.	Copy your generated API key
+4.	Update the data in `$HOME/Library/Application\ Support/MXMachinaPlugin/secrets.json`:
+
+```json
+{
+  "OpenAI": {
+    "ApiKey": "YOUR_OPENAI_API_KEY"
+  }
+}
+```
 
 ## Available Actions
 
