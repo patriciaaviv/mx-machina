@@ -24,7 +24,7 @@ namespace Loupedeck.MXMachinaPlugin
                     if (_timer == null)
                     {
                         _timer = new PomodoroTimer();
-                        // InitializeSmartFeatures();
+                        InitializeSmartFeatures();
                     }
                     return _timer;
                 }
@@ -67,7 +67,7 @@ namespace Loupedeck.MXMachinaPlugin
         private static void InitializeSmartFeatures()
         {
             // Use smart work duration suggestions and show completion notifications
-            Timer.OnSessionComplete += async (phase) =>
+            Timer.OnWorkSessionComplete += async (phase) =>
             {
                 // Record session in statistics
                 var duration = phase switch

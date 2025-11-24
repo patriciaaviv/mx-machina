@@ -34,7 +34,7 @@ namespace Loupedeck.MXMachinaPlugin
 
         public event Action OnTick;
         public event Action OnStateChanged;
-        public event Action<PomodoroPhase> OnSessionComplete;
+        public event Action<PomodoroPhase> OnWorkSessionComplete;
         public event Action OnPause;
         public event Action OnWorkBegin;
 
@@ -130,7 +130,7 @@ namespace Loupedeck.MXMachinaPlugin
         private void CompleteWorkSession()
         {
             this.CompletedPomodoros++;
-            OnSessionComplete?.Invoke(PomodoroPhase.Work);
+            OnWorkSessionComplete?.Invoke(PomodoroPhase.Work);
         }
 
         private TimeSpan GetDurationForPhase(PomodoroPhase phase) => phase switch

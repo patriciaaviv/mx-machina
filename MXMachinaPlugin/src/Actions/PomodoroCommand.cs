@@ -14,7 +14,7 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 this.Timer.OnTick += () => this.ActionImageChanged();
                 this.Timer.OnStateChanged += () => this.ActionImageChanged();
-                this.Timer.OnSessionComplete += (state) =>
+                this.Timer.OnWorkSessionComplete += (state) =>
                 {
                     PluginLog.Info($"Pomodoro session completed: {state}");
                 };
