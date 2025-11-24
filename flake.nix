@@ -1,5 +1,5 @@
 {
-  description = "A minimal rust development flake";
+  description = "A minimal development flake";
 
   inputs = {
     devshell = {
@@ -63,9 +63,11 @@
               {
                 name = "release";
                 command = ''
+                  pushd $PRJ_ROOT/MXMachinaPlugin
                   dotnet build -c Release &&
                   logiplugintool pack $PRJ_ROOT/MXMachinaPlugin/bin/Release/ $PRJ_ROOT/MXMachinaPlugin.lplug4 &&
                   logiplugintool verify $PRJ_ROOT/MXMachinaPlugin.lplug4
+                  popd
                 '';
                 help = "build and verify the .lplug4 release";
                 category = "release";
