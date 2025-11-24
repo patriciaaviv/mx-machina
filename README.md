@@ -72,6 +72,14 @@ A productivity-focused plugin for the Logitech MX 4 mouse that brings a full-fea
 }
 ```
 
+
+### Example Actions Ring Config
+
+<img width="527" height="406" alt="image" src="https://github.com/user-attachments/assets/dba1f7dc-da51-4c10-b889-975e2e2673cb" />
+
+<img width="635" height="297" alt="image" src="https://github.com/user-attachments/assets/078ffa30-dc0d-4eca-be31-2a043d74fc48" />
+
+
 ## Available Actions
 
 | Action | Description |
@@ -173,5 +181,6 @@ MIT License
 ## Author
 
 Built with the Logitech Actions SDK
+
 
 
