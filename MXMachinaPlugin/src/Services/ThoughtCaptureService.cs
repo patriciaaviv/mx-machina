@@ -25,18 +25,7 @@ namespace Loupedeck.MXMachinaPlugin
 
     public class ThoughtCaptureService
     {
-        private static String GetDataDirectory()
-        {
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var dataDir = Path.Combine(appData, "MXMachinaPlugin");
-            if (!Directory.Exists(dataDir))
-            {
-                Directory.CreateDirectory(dataDir);
-            }
-            return dataDir;
-        }
-
-        private static String DataFilePath => Path.Combine(GetDataDirectory(), "thoughts.json");
+        private static String DataFilePath => Path.Combine(Utils.GetDataDirectory(), "thoughts.json");
         private ThoughtCaptureData _data;
         private readonly HttpClient _httpClient;
 
@@ -174,10 +163,10 @@ namespace Loupedeck.MXMachinaPlugin
             {
                 // Group thoughts for batch categorization
                 var thoughtsText = String.Join("\n", unreviewed.Select((t, i) => $"{i + 1}. {t.Text}"));
-                
+
                 // Use OpenAI API to categorize
                 var categories = await this.CategorizeWithAIAsync(thoughtsText, unreviewed.Count);
-                
+
                 // Apply categories
                 for (var i = 0; i < unreviewed.Count && i < categories.Count; i++)
                 {
@@ -240,7 +229,7 @@ Return ONLY a JSON array of category names, one per thought, in order. Example: 
                 {
                     var responseJson = await response.Content.ReadAsStringAsync();
                     var responseData = JsonSerializer.Deserialize<JsonElement>(responseJson);
-                    
+
                     if (responseData.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
                     {
                         var message = choices[0].GetProperty("message").GetProperty("content").GetString();
@@ -302,13 +291,13 @@ Return ONLY the category name as a single word. Example: ""Work"" or ""Personal"
                 {
                     var responseJson = await response.Content.ReadAsStringAsync();
                     var responseData = JsonSerializer.Deserialize<JsonElement>(responseJson);
-                    
+
                     if (responseData.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
                     {
                         var message = choices[0].GetProperty("message").GetProperty("content").GetString();
                         // Clean up the response (remove quotes, whitespace)
                         var category = message?.Trim().Trim('"', '\'', ' ').Trim();
-                        
+
                         // Validate category
                         var validCategories = new[] { "Work", "Personal", "Urgent", "Shopping", "Health", "Other" };
                         if (validCategories.Contains(category, StringComparer.OrdinalIgnoreCase))
@@ -320,7 +309,7 @@ Return ONLY the category name as a single word. Example: ""Work"" or ""Personal"
                         }
                     }
                 }
-                
+
                 PluginLog.Warning("Failed to get valid category from OpenAI, using keyword-based categorization");
                 this.CategorizeWithKeywords(new List<ThoughtItem> { thought });
             }
@@ -339,13 +328,13 @@ Return ONLY the category name as a single word. Example: ""Work"" or ""Personal"
             foreach (var thought in thoughts)
             {
                 var text = thought.Text.ToLower();
-                
-                if (text.Contains("email") || text.Contains("meeting") || text.Contains("deadline") || 
+
+                if (text.Contains("email") || text.Contains("meeting") || text.Contains("deadline") ||
                     text.Contains("project") || text.Contains("client") || text.Contains("work"))
                 {
                     thought.Category = "Work";
                 }
-                else if (text.Contains("buy") || text.Contains("milk") || text.Contains("grocery") || 
+                else if (text.Contains("buy") || text.Contains("milk") || text.Contains("grocery") ||
                          text.Contains("shopping") || text.Contains("store"))
                 {
                     thought.Category = "Shopping";
@@ -377,7 +366,7 @@ Return ONLY the category name as a single word. Example: ""Work"" or ""Personal"
                 var searchPaths = new List<String>();
 
                 // 1. First check the data directory (for deployed plugin)
-                var dataDirPath = Path.Combine(GetDataDirectory(), "secrets.json");
+                var dataDirPath = Path.Combine(Utils.GetDataDirectory(), "secrets.json");
                 searchPaths.Add(dataDirPath);
 
                 // 2. Check assembly directory and parent directories (for development)
@@ -548,4 +537,3 @@ Return ONLY the category name as a single word. Example: ""Work"" or ""Personal"
         }
     }
 }
-

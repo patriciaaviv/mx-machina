@@ -2,8 +2,6 @@ namespace Loupedeck.MXMachinaPlugin
 {
     using System;
     using System.Diagnostics;
-    using System.IO;
-    using System.Text;
 
     /// <summary>
     /// Helper class for showing a minimal text input at cursor position on macOS
@@ -176,4 +174,3 @@ namespace Loupedeck.MXMachinaPlugin
         }
     }
 }
-

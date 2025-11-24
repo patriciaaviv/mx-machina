@@ -29,19 +29,8 @@ namespace Loupedeck.MXMachinaPlugin
         private const String RedirectUri = "http://localhost:8080/callback";
         private const String Scope = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events";
 
-        private static String GetDataDirectory()
-        {
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var dataDir = Path.Combine(appData, "MXMachinaPlugin");
-            if (!Directory.Exists(dataDir))
-            {
-                Directory.CreateDirectory(dataDir);
-            }
-            return dataDir;
-        }
-
-        private static String TokenFilePath => Path.Combine(GetDataDirectory(), "tokens.json");
-        private static String SecretsFilePath => Path.Combine(GetDataDirectory(), "secrets.json");
+        private static String TokenFilePath => Path.Combine(Utils.GetDataDirectory(), "tokens.json");
+        private static String SecretsFilePath => Path.Combine(Utils.GetDataDirectory(), "secrets.json");
 
         public Boolean IsAuthenticated => !String.IsNullOrEmpty(this._accessToken) && DateTime.Now < this._tokenExpiry;
 
@@ -168,7 +157,7 @@ namespace Loupedeck.MXMachinaPlugin
                 else
                 {
                     PluginLog.Warning($"LoadSecrets: secrets.json not found at {secretsPath}");
-                    PluginLog.Warning($"Please copy your secrets.json to: {GetDataDirectory()}");
+                    PluginLog.Warning($"Please copy your secrets.json to: {Utils.GetDataDirectory()}");
                 }
 
                 // Fallback: check assembly directory

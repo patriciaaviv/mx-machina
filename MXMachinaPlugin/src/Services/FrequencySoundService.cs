@@ -42,20 +42,9 @@ namespace Loupedeck.MXMachinaPlugin
         private Int32 _segmentElapsedSeconds = 0;
 
         // Use the hardcoded path to secrets.json in the project root
-        private static String SecretsFilePath => Path.Combine(GetDataDirectory(), "secrets.json");
+        private static String SecretsFilePath => Path.Combine(Utils.GetDataDirectory(), "secrets.json");
 
         public Boolean IsMacOS => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-
-        private static String GetDataDirectory()
-        {
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var dataDir = Path.Combine(appData, "MXMachinaPlugin");
-            if (!Directory.Exists(dataDir))
-            {
-                Directory.CreateDirectory(dataDir);
-            }
-            return dataDir;
-        }
 
         /// <summary>
         /// Finds the sox executable path
