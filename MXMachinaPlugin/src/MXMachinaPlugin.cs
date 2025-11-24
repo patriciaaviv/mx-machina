@@ -49,5 +49,20 @@ namespace Loupedeck.MXMachinaPlugin
         public override void Unload()
         {
         }
+
+        // (Un)Install returns success
+        // NOTE: Log does in fact not log for these overrides
+        public override bool Install()
+        {
+            this.Log.Info("Installing...");
+            Utils.InitialDirectorySetup();
+            return true;
+        }
+
+        public override bool Uninstall()
+        {
+            PluginLog.Info("Uninstalling...");
+            return true;
+        }
     }
 }
