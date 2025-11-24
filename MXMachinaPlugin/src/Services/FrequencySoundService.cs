@@ -10,7 +10,6 @@ namespace Loupedeck.MXMachinaPlugin
     using System.Text;
     using System.Text.Json;
     using System.Threading.Tasks;
-    using System.Text.RegularExpressions;
 
     public enum NoiseType
     {
@@ -35,7 +34,7 @@ namespace Loupedeck.MXMachinaPlugin
         private Boolean _isPaused = false;
         private NoiseType _currentNoiseType = NoiseType.PinkNoise;
         private const Int32 FadeDurationSeconds = 2; // 2 seconds fade in/out
-        
+
         // Playlist state for pause/resume
         private NoisePlaylist _currentPlaylist;
         private Int32 _currentSegmentIndex = 0;
@@ -43,9 +42,20 @@ namespace Loupedeck.MXMachinaPlugin
         private Int32 _segmentElapsedSeconds = 0;
 
         // Use the hardcoded path to secrets.json in the project root
-        private static String SecretsFilePath => "/Users/silv/Documents/Programming/mx-machina/secrets.json";
+        private static String SecretsFilePath => Path.Combine(GetDataDirectory(), "secrets.json");
 
         public Boolean IsMacOS => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+        private static String GetDataDirectory()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var dataDir = Path.Combine(appData, "MXMachinaPlugin");
+            if (!Directory.Exists(dataDir))
+            {
+                Directory.CreateDirectory(dataDir);
+            }
+            return dataDir;
+        }
 
         /// <summary>
         /// Finds the sox executable path
@@ -100,7 +110,7 @@ namespace Loupedeck.MXMachinaPlugin
             this._httpClient = new HttpClient();
             this._httpClient.Timeout = TimeSpan.FromSeconds(30); // Set timeout for API calls
             this.LoadSecrets();
-            
+
             // Hook into timer events
             PomodoroService.Timer.OnStateChanged += this.OnTimerStateChanged;
             PomodoroService.Timer.OnPause += this.OnTimerPaused;
@@ -113,7 +123,7 @@ namespace Loupedeck.MXMachinaPlugin
         private void OnTimerStateChanged()
         {
             var timer = PomodoroService.Timer;
-            
+
             // Stop if timer is completely stopped (not paused)
             if (timer.State == TimerState.Stopped && this._isPlaying)
             {
@@ -173,7 +183,7 @@ namespace Loupedeck.MXMachinaPlugin
 
                     if (secrets.TryGetProperty("OpenAI", out var openai))
                     {
-                        this._llmApiKey = openai.TryGetProperty("ApiKey", out var apiKey) 
+                        this._llmApiKey = openai.TryGetProperty("ApiKey", out var apiKey)
                             ? apiKey.GetString() : null;
                         // Default to OpenAI API endpoint
                         this._llmApiUrl = "https://api.openai.com/v1/chat/completions";
@@ -233,7 +243,6 @@ namespace Loupedeck.MXMachinaPlugin
         {
             var timer = PomodoroService.Timer;
             var remainingSeconds = (Int32)timer.RemainingTime.TotalSeconds;
-            
             if (remainingSeconds <= 0)
             {
                 remainingSeconds = 1800; // Default 30 minutes
@@ -281,11 +290,10 @@ namespace Loupedeck.MXMachinaPlugin
             var timer = PomodoroService.Timer;
             var currentTime = DateTime.Now;
             var remainingTime = timer.RemainingTime;
-            
+
             // Calculate timer start and end times
             DateTime? timerStartTime = null;
             DateTime? timerEndTime = null;
-            
             if (timer.IsRunning)
             {
                 // Calculate start time: endTime - totalDuration
@@ -296,7 +304,6 @@ namespace Loupedeck.MXMachinaPlugin
                     PomodoroPhase.LongBreak => timer.LongBreakMinutes,
                     _ => 0
                 };
-                
                 if (totalMinutes > 0)
                 {
                     var totalDuration = TimeSpan.FromMinutes(totalMinutes);
@@ -465,10 +472,10 @@ end tell";
                 {
                     // Parse bounds and capture window region
                     var parts = boundsOutput.Split(' ');
-                    if (parts.Length >= 4 && 
-                        Int32.TryParse(parts[0], out var x) && 
-                        Int32.TryParse(parts[1], out var y) && 
-                        Int32.TryParse(parts[2], out var w) && 
+                    if (parts.Length >= 4 &&
+                        Int32.TryParse(parts[0], out var x) &&
+                        Int32.TryParse(parts[1], out var y) &&
+                        Int32.TryParse(parts[2], out var w) &&
                         Int32.TryParse(parts[3], out var h))
                     {
                         // Capture specific region: -R x,y,w,h
@@ -587,7 +594,6 @@ end tell";
         {
             var remainingSeconds = context.TimerRemainingMinutes * 60;
             var elapsedSeconds = context.TimerElapsedMinutes * 60;
-            
             var timerInfo = "";
             if (context.TimerStartTime.HasValue && context.TimerEndTime.HasValue)
             {
@@ -654,11 +660,12 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
 
             // Build messages array
             var messages = new List<Object>();
-            
+
             // System message
-            messages.Add(new { 
-                role = "system", 
-                content = "You are a helpful assistant that creates optimized noise playlists for focus and productivity. Analyze the screenshot to understand what the user is working on. You do NOT need to use all available noise types, and segments do NOT need to be equal length. Choose only the noise types and durations that best fit the user's context and work situation. Always respond with valid JSON only, following the exact format specified." 
+            messages.Add(new
+            {
+                role = "system",
+                content = "You are a helpful assistant that creates optimized noise playlists for focus and productivity. Analyze the screenshot to understand what the user is working on. You do NOT need to use all available noise types, and segments do NOT need to be equal length. Choose only the noise types and durations that best fit the user's context and work situation. Always respond with valid JSON only, following the exact format specified."
             });
 
             // User message with optional screenshot
@@ -677,13 +684,12 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                         }
                     }
                 };
-                
                 messages.Add(new
                 {
                     role = "user",
                     content = contentItems
                 });
-                
+
                 // Use vision-capable model
                 this._llmModel = "gpt-4o-mini"; // or "gpt-4o" for better vision
             }
@@ -718,13 +724,13 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                 if (responseData.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
                 {
                     var message = choices[0].GetProperty("message").GetProperty("content").GetString();
-                    
+
                     // Try to parse JSON from the message
                     // LLM might wrap JSON in markdown code blocks, so strip them
                     try
                     {
                         var jsonText = message.Trim();
-                        
+
                         // Remove markdown code blocks if present
                         if (jsonText.StartsWith("```json"))
                         {
@@ -734,14 +740,11 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                         {
                             jsonText = jsonText.Substring(3); // Remove "```"
                         }
-                        
                         if (jsonText.EndsWith("```"))
                         {
                             jsonText = jsonText.Substring(0, jsonText.Length - 3); // Remove trailing "```"
                         }
-                        
                         jsonText = jsonText.Trim();
-                        
                         var llmResponse = JsonSerializer.Deserialize<JsonElement>(jsonText);
                         return this.ParsePlaylistFromJson(llmResponse, remainingSeconds);
                     }
@@ -780,11 +783,11 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                     {
                         var noiseTypeStr = segment.GetProperty("noiseType").GetString();
                         var duration = segment.GetProperty("durationSeconds").GetInt32();
-                        var offset = segment.TryGetProperty("startOffsetSeconds", out var off) 
-                            ? off.GetInt32() 
+                        var offset = segment.TryGetProperty("startOffsetSeconds", out var off)
+                            ? off.GetInt32()
                             : 0;
-                        var reason = segment.TryGetProperty("reason", out var reasonProp) 
-                            ? reasonProp.GetString() 
+                        var reason = segment.TryGetProperty("reason", out var reasonProp)
+                            ? reasonProp.GetString()
                             : "No reason provided";
 
                         // Parse noise type
@@ -840,7 +843,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
         {
             var timer = PomodoroService.Timer;
             var noiseType = this.DetermineNoiseTypeForContext();
-            
             PluginLog.Info($"Playing contextual noise: {noiseType} based on timer state: {timer.State}");
             this.PlayNoise(noiseType, durationSeconds); // Fade is enabled by default
         }
@@ -874,7 +876,7 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
             // Get current remaining time to adjust playlist durations
             var currentRemainingSeconds = (Int32)timer.RemainingTime.TotalSeconds;
             var originalTotalSeconds = playlist.TotalDurationSeconds;
-            
+
             // Adjust playlist if LLM processing took time (or if timer has less time than expected)
             if (currentRemainingSeconds != originalTotalSeconds)
             {
@@ -887,21 +889,20 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                 {
                     PluginLog.Info($"Adjusting playlist: Timer has more time than expected ({currentRemainingSeconds}s vs {originalTotalSeconds}s), adjusting");
                 }
-                
+
                 // Ensure we don't exceed remaining time
                 var targetDuration = Math.Min(currentRemainingSeconds, originalTotalSeconds);
-                
+
                 // Scale all segment durations proportionally
                 var scaleFactor = targetDuration > 0 ? (Double)targetDuration / originalTotalSeconds : 0.0;
                 var adjustedTotal = 0;
-                
                 foreach (var segment in playlist.Segments)
                 {
                     var originalDuration = segment.DurationSeconds;
                     segment.DurationSeconds = Math.Max(1, (Int32)(originalDuration * scaleFactor));
                     adjustedTotal += segment.DurationSeconds;
                 }
-                
+
                 // Adjust last segment to match exactly
                 if (playlist.Segments.Count > 0 && adjustedTotal != targetDuration)
                 {
@@ -909,7 +910,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                     var difference = targetDuration - adjustedTotal;
                     lastSegment.DurationSeconds = Math.Max(1, lastSegment.DurationSeconds + difference);
                 }
-                
                 playlist.TotalDurationSeconds = targetDuration;
             }
 
@@ -960,19 +960,16 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
 
                 this._currentSegmentIndex = i;
                 var segment = this._currentPlaylist.Segments[i];
-                
                 PluginLog.Info($"Playing segment {i + 1}/{this._currentPlaylist.Segments.Count}: {segment.NoiseType} for {segment.DurationSeconds}s (offset: {segment.StartOffsetSeconds}s)");
 
                 // Show notification with reason for this noise choice
-                var reason = !String.IsNullOrEmpty(segment.Reason) 
-                    ? segment.Reason 
+                var reason = !String.IsNullOrEmpty(segment.Reason)
+                    ? segment.Reason
                     : $"Playing {segment.NoiseType} for focus";
-                
                 var durationMinutes = segment.DurationSeconds / 60;
-                var durationText = durationMinutes > 0 
-                    ? $"{durationMinutes} min" 
+                var durationText = durationMinutes > 0
+                    ? $"{durationMinutes} min"
                     : $"{segment.DurationSeconds}s";
-                
                 PomodoroService.Notification.ShowNotification(
                     $"🎵 {segment.NoiseType}",
                     $"{reason} ({durationText})",
@@ -1029,7 +1026,7 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                             // Resume - break out to restart this segment
                             break;
                         }
-                        
+
                         // Check if timer stopped
                         if (PomodoroService.Timer.State == TimerState.Stopped)
                         {
@@ -1038,7 +1035,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                             this._currentPlaylist = null;
                             return;
                         }
-                        
                         await Task.Delay(100);
                     }
                 }
@@ -1062,13 +1058,12 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
             }
 
             var recommendedNoise = this.DetermineNoiseTypeForContext();
-            
+
             // If the recommended noise type is different from current, crossfade
             if (recommendedNoise != this._currentNoiseType)
             {
                 var timer = PomodoroService.Timer;
                 var duration = 30;
-                
                 if (timer.IsRunning && timer.Phase == PomodoroPhase.Work)
                 {
                     var remaining = (Int32)timer.RemainingTime.TotalMinutes;
@@ -1086,7 +1081,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
         public NoiseType DetermineNoiseTypeForContext()
         {
             var timer = PomodoroService.Timer;
-            
             if (timer.State == TimerState.Stopped || !timer.IsRunning)
             {
                 // No timer running - use gentle pink noise
@@ -1100,10 +1094,9 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
             }
 
             // Work session - determine based on progress
-            var totalMinutes = timer.Phase == PomodoroPhase.Work 
-                ? timer.WorkMinutes 
+            var totalMinutes = timer.Phase == PomodoroPhase.Work
+                ? timer.WorkMinutes
                 : timer.ShortBreakMinutes;
-            
             var elapsedMinutes = totalMinutes - (Int32)timer.RemainingTime.TotalMinutes;
             var progressPercent = totalMinutes > 0 ? (elapsedMinutes * 100) / totalMinutes : 0;
 
@@ -1262,7 +1255,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                 // For long files, we need to wait longer - calculate based on duration
                 var timeoutMs = Math.Max(30000, durationSeconds * 100); // At least 100ms per second
                 var exited = soxProcess.WaitForExit(timeoutMs);
-                
                 if (!exited)
                 {
                     PluginLog.Warning($"sox process timed out after {timeoutMs}ms, killing...");
@@ -1276,7 +1268,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                     var fileInfo = new FileInfo(tempFile);
                     var expectedSize = durationSeconds * 44100 * 2; // 44.1kHz, 16-bit (2 bytes), mono
                     PluginLog.Info($"Generated audio file: {tempFile}, size: {fileInfo.Length} bytes (expected ~{expectedSize} bytes for {durationSeconds}s)");
-                    
                     if (fileInfo.Length < 1000)
                     {
                         PluginLog.Error($"Audio file is too small ({fileInfo.Length} bytes), sox may have failed silently");
@@ -1302,7 +1293,7 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                         this._currentSoundProcess.Start();
                         this._isPlaying = true;
                         this._currentNoiseType = noiseType;
-                        
+
                         // Check if process started successfully
                         if (this._currentSoundProcess.HasExited)
                         {
@@ -1312,7 +1303,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                             this._currentSoundProcess = null;
                             return;
                         }
-                        
                         PluginLog.Info($"afplay started successfully (PID: {this._currentSoundProcess.Id})");
                     }
                     catch (Exception ex)
@@ -1395,7 +1385,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                 // For long files, we need to wait longer
                 var timeoutMs = Math.Max(30000, durationSeconds * 100);
                 var exited = newSoxProcess.WaitForExit(timeoutMs);
-                
                 if (!exited)
                 {
                     PluginLog.Warning($"sox process timed out after {timeoutMs}ms, killing...");
@@ -1408,7 +1397,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                     // Verify file size
                     var fileInfo = new FileInfo(newTempFile);
                     PluginLog.Info($"Generated crossfade audio file: {newTempFile}, size: {fileInfo.Length} bytes");
-                    
                     if (fileInfo.Length < 1000)
                     {
                         PluginLog.Error($"Crossfade audio file is too small ({fileInfo.Length} bytes)");
@@ -1452,7 +1440,6 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                         PluginLog.Error(ex, $"Failed to start afplay for crossfade");
                         return;
                     }
-                    
                     this._currentSoundProcess = newPlayProcess;
                     this._currentNoiseType = newNoiseType;
 
@@ -1496,7 +1483,7 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
             {
                 // Generate a simple tone using sox if available, otherwise use afplay with a generated file
                 var tempFile = Path.Combine(Path.GetTempPath(), $"frequency_{frequencyHz}Hz_{Guid.NewGuid()}.wav");
-                
+
                 // Try to use sox to generate the tone
                 // Find sox executable
                 String soxPath = this.FindSoxExecutable();
@@ -1652,11 +1639,11 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
         {
             // Force stop any running processes
             this.ForceStopAllAudio();
-            
+
             // Reset state (but keep playlist if paused)
             this._currentSoundProcess = null;
             this._isPlaying = false;
-            
+
             // Only clear playlist if not paused (paused state will resume)
             if (!this._isPaused)
             {
@@ -1675,7 +1662,7 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
             {
                 PluginLog.Info("Pausing frequency sound...");
                 this._isPaused = true;
-                
+
                 // Force stop the current audio process
                 if (this._currentSoundProcess != null && !this._currentSoundProcess.HasExited)
                 {
@@ -1701,10 +1688,9 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
                     // Process might have already exited, but we still want to mark as paused
                     this._isPlaying = false;
                 }
-                
+
                 // Also kill any orphaned afplay processes
                 this.ForceStopAllAudio();
-                
                 PluginLog.Info($"Frequency sound paused (playlist: {this._currentPlaylist != null}, segment: {this._currentSegmentIndex})");
             }
             else
@@ -1807,4 +1793,3 @@ The sum of all segment durations should equal totalDurationSeconds. Start offset
         public Int32 TotalDurationSeconds { get; set; }
     }
 }
-
