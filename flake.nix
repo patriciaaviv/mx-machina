@@ -60,6 +60,16 @@
                 help = "tail plugin log";
                 category = "debug";
               }
+              {
+                name = "release";
+                command = ''
+                  dotnet build -c Release &&
+                  logiplugintool pack $PRJ_ROOT/MXMachinaPlugin/bin/Release/ $PRJ_ROOT/MXMachinaPlugin.lplug4 &&
+                  logiplugintool verify $PRJ_ROOT/MXMachinaPlugin.lplug4
+                '';
+                help = "build and verify the .lplug4 release";
+                category = "release";
+              }
             ];
             devshell.startup.pre-commit.text = config.pre-commit.installationScript;
           };
