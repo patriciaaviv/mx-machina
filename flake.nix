@@ -40,13 +40,17 @@
           devshells.default = {
             packages = [
               pkgs.nil
-              pkgs.dotnet-sdk_10
+              pkgs.dotnet-sdk_8
               pkgs.omnisharp-roslyn
             ];
             env = [
               {
                 name = "PATH";
                 prefix = "$HOME/.dotnet/tools";
+              }
+              {
+                name = "DOTNET_ROOT";
+                value = "${pkgs.dotnet-sdk_8}/share/dotnet/";
               }
             ];
             commands = [
